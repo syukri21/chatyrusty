@@ -2,3 +2,5 @@
 /.idea
 dist
 .dioxus
+
+/tailwind/node_modules/
