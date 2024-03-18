@@ -8,16 +8,51 @@ mod components {
 }
 
 fn main() {
+
+
     launch(app)
 }
 
 fn app() -> Element {
-    let mut count = use_signal(|| 0);
     rsx! {
         Header{},
-        h1 { "High-Five counter: {count}" }
-        button { onclick: move |_| count += 1, "Up high!" }
-        button { onclick: move |_| count -= 1, "Down low!" }
+        div {
+            class: "flex min-h-full flex-col justify-center px-6 py-12 lg:px-8",
+            div {
+                class: "sm:mx-auto sm:w-full sm:max-w-sm",
+                h2 {
+                    class: "mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900",
+                    "Hello, world!"
+                },
+                p {
+                    class: "mt-10 text-center text-sm text-gray-600",
+                    "Don't have an account? ",
+                    a {
+                        class: "font-semibold leading-6 text-indigo-600 hover:text-indigo-500",
+                        href: "#",
+                        "Sign up"
+                    }
+                },
+                p {
+                    class: "mt-10 text-center text-sm text-gray-600",
+                    "Already have an account? ",
+                    a {
+                        class: "font-semibold leading-6 text-indigo-600 hover:text-indigo-500",
+                        href: "#",
+                        "Sign in"
+                    }
+                },
+                p {
+                    class: "mt-10 text-center text-sm text-gray-600",
+                    "By continuing, you agree to our ",
+                    a {
+                        class: "font-semibold leading-6 text-indigo-600 hover:text-indigo-500",
+                        href: "#",
+                        "terms and conditions"
+                    }
+                }
+            }
+        }
     }
 }
 
