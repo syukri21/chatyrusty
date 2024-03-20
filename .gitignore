@@ -4,3 +4,8 @@ dist
 .dioxus
 
 /tailwind/node_modules/
+index.html
+index.rsx
+/node_modules
+/src/index.html
+/src/index.rs
