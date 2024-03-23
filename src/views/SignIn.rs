@@ -1,15 +1,13 @@
 #![allow(non_snake_case, unused)]
 
-use crate::components::header::Header;
 use dioxus::dioxus_core;
 use dioxus::prelude::*;
 
 pub(crate) fn Page() -> Element {
     rsx! {
-            Header{},
-            div { class: "flex min-h-full flex-col justify-center px-6 py-12 lg:px-8",
-            div { class: "sm:mx-auto sm:w-full sm:max-w-sm",
-                img {
+        div { class: "flex min-h-full flex-col justify-center px-6 py-12",
+        div { class: "sm:mx-auto sm:w-full sm:max-w-sm",
+        img {
                     alt: "Your Company",
                     src: "https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600",
                     class: "mx-auto h-10 w-auto"
@@ -74,7 +72,7 @@ pub(crate) fn Page() -> Element {
                 p { class: "mt-10 text-center text-sm text-gray-500",
                     "Not a member? "
                     a {
-                        href: "#",
+                        href: "/signup",
                         class: "font-semibold leading-6 text-indigo-600 hover:text-indigo-500",
                         "Sign up now!"
                     }
