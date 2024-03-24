@@ -18,7 +18,11 @@ pub(crate) fn Page() -> Element {
             }
             div { class: "mt-10 sm:mx-auto sm:w-full sm:max-w-sm",
                 form { action: "#", method: "POST", class: "space-y-6",
-                    div {
+                onsubmit: move |event| {
+                    event.stop_propagation();
+                    log::info!("Form submitted {event:?}")
+                },
+                div {
                         label {
                             r#for: "email",
                             class: "block text-sm font-medium leading-6 text-gray-900",
