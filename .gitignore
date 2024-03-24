@@ -9,3 +9,6 @@ index.rsx
 /node_modules
 /src/index.html
 /src/index.rs
+
+/docker/volume
+
