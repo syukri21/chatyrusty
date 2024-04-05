@@ -1,3 +1,26 @@
-fn main() {
-    println!("Hello, world!");
+use axum::{routing::get, Router};
+use tokio::net::TcpListener;
+use tracing::info;
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+
+    let app = Router::new().route(
+        "/",
+        get(|| async {
+            info!("Hello, World!");
+            "Hello, World!"
+        }),
+    );
+    let listener = TcpListener::bind("0.0.0.0:3000")
+        .await
+        .expect("Failed to bind to 0.0.0.0:3000");
+
+    info!("Listening on {}", listener.local_addr().unwrap());
+    axum::serve(listener, app)
+        .await
+        .expect("Failed to start server");
 }
