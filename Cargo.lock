@@ -494,6 +494,7 @@ name = "rchaty-server"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "rchaty-core",
  "tokio",
  "tower-http",
  "tracing",

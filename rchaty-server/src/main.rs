@@ -1,4 +1,5 @@
 use axum::{routing::get, Router};
+use rchaty_core::run;
 use tokio::net::TcpListener;
 use tracing::info;
 
@@ -11,7 +12,8 @@ async fn main() {
     let app = Router::new().route(
         "/",
         get(|| async {
-            info!("Hello, World!");
+            let test = run().await;
+            info!("test: {}", test);
             "Hello, World!"
         }),
     );
