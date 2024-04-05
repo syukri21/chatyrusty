@@ -3,5 +3,6 @@
 members = [
   "rchaty-web",
   "rchaty-server",
-  "rchaty-core"
+  "rchaty-core",
 ]
+resolver = "2"
