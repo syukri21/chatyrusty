@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+  "rchaty-web",
+  "rchaty-server",
+  "rchaty-core"
+]
