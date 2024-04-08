@@ -6,7 +6,7 @@ use axum::{
 };
 use rchaty_core::Auth;
 
-use crate::model::{BaseResp, SignupParams};
+use crate::model::{BaseResp, SignupReq};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -14,7 +14,7 @@ pub struct AppState {
 }
 
 pub async fn signup<S>(
-    Query(_params): Query<SignupParams>,
+    Query(_params): Query<SignupReq>,
     State(service): State<S>,
 ) -> Json<BaseResp<String>>
 where

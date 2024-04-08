@@ -8,7 +8,7 @@ pub struct BaseResp<T> {
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]
-pub struct SignupParams {
+pub struct SignupReq {
     pub first_name: String,
     pub last_name: String,
     pub email: String,
