@@ -1,6 +1,9 @@
 use axum::{routing::get, Router};
 use handlers::signup;
-use rchaty_core::AuthImpl;
+use rchaty_core::{
+    kcloak::{KcloakConfig, KcloakImpl},
+    AuthImpl,
+};
 use tokio::net::TcpListener;
 use tracing::info;
 
@@ -13,7 +16,10 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    let auth = AuthImpl::new();
+    let kcloak_config = KcloakConfig::from_env();
+    let kcloak = KcloakImpl::new(kcloak_config);
+
+    let auth = AuthImpl::new(kcloak.await);
 
     let app = Router::new()
         .route("/signup", get(signup::<AuthImpl>))

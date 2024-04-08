@@ -4,6 +4,15 @@ pub struct BaseError {
     messages: String,
 }
 
+impl From<keycloak::KeycloakError> for BaseError {
+    fn from(value: keycloak::KeycloakError) -> Self {
+        BaseError {
+            code: 500,
+            messages: value.to_string(),
+        }
+    }
+}
+
 impl std::fmt::Display for BaseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: {}", self.code, self.messages)
