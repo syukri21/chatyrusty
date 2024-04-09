@@ -3,6 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use kcloak::Kcloak;
 use kcloak::KcloakImpl;
+use keycloak::types::UserRepresentation;
 
 pub use crate::model::BaseError;
 pub use crate::model::SignupParams;
@@ -33,9 +34,27 @@ pub trait Auth {
 impl Auth for AuthImpl {
     async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError> {
         let client = self.kcloak.get_client();
-        let realmname = client.realm_get("chaty").await?.realm;
         tracing::info!("signup params: {:?}", params);
-        tracing::info!("realmname: {:?}", realmname);
+        client
+            .realm_users_post(
+                self.kcloak.realm_name(),
+                UserRepresentation {
+                    enabled: Some(true),
+                    email: Some(params.email),
+                    first_name: Some(params.first_name),
+                    last_name: Some(params.last_name),
+                    email_verified: Some(false),
+                    username: Some(params.username),
+                    credentials: Some(vec![keycloak::types::CredentialRepresentation {
+                        type_: Some("password".to_string()),
+                        temporary: Some(false),
+                        value: Some(params.password),
+                        ..Default::default()
+                    }]),
+                    ..Default::default()
+                },
+            )
+            .await?;
         Ok(SignupResult {})
     }
 }

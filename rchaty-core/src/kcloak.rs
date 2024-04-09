@@ -43,11 +43,16 @@ pub struct KcloakImpl {
 
 pub trait Kcloak {
     fn get_client(&self) -> &KeycloakAdmin;
+    fn realm_name(&self) -> &str;
 }
 
 impl Kcloak for KcloakImpl {
     fn get_client(&self) -> &KeycloakAdmin {
         &self.client
+    }
+
+    fn realm_name(&self) -> &str {
+        &self.kconfig.realm
     }
 }
 

@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use axum::{
-    extract::{Query, State},
-    Json,
-};
+use axum::{extract::State, Json};
 use rchaty_core::Auth;
 
 use crate::model::{BaseResp, SignupReq};
@@ -14,20 +11,28 @@ pub struct AppState {
 }
 
 pub async fn signup<S>(
-    Query(_params): Query<SignupReq>,
     State(service): State<S>,
+    Json(params): Json<SignupReq>,
 ) -> Json<BaseResp<String>>
 where
     S: Auth + Send + Sync,
 {
-    let _ = service
+    let resp = service
         .signup(rchaty_core::SignupParams {
-            first_name: "Foo".to_string(),
-            last_name: "Bar".to_string(),
-            email: "foo@bar".to_string(),
-            password: "12345".to_string(),
+            first_name: params.first_name,
+            last_name: params.last_name,
+            username: params.username,
+            email: params.email,
+            password: params.password,
         })
-        .await
-        .unwrap();
+        .await;
+
+    if let Err(e) = resp {
+        return Json(BaseResp {
+            status: "400".to_string(),
+            message: e.to_string(),
+            ..Default::default()
+        });
+    }
     Json(BaseResp::default())
 }
