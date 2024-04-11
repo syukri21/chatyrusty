@@ -29,8 +29,8 @@ where
 
     if let Err(e) = resp {
         return Json(BaseResp {
-            status: "400".to_string(),
-            message: e.to_string(),
+            status: e.code.to_string(),
+            message: e.messages,
             ..Default::default()
         });
     }

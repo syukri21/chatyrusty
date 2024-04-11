@@ -33,11 +33,11 @@ pub trait Auth {
 #[async_trait]
 impl Auth for AuthImpl {
     async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError> {
-        let client = self.kcloak.get_client();
+        let client = self.kcloak.get_client().await?;
         tracing::info!("signup params: {:?}", params);
         client
             .realm_users_post(
-                self.kcloak.realm_name(),
+                &self.kcloak.get_kconfig().realm,
                 UserRepresentation {
                     enabled: Some(true),
                     email: Some(params.email),

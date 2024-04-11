@@ -17,9 +17,10 @@ async fn main() {
         .init();
 
     let kcloak_config = KcloakConfig::from_env();
-    let kcloak = KcloakImpl::new(kcloak_config);
-
-    let auth = AuthImpl::new(kcloak.await);
+    let kcloak = KcloakImpl::new(kcloak_config)
+        .await
+        .expect("Error initializing kcloak");
+    let auth = AuthImpl::new(kcloak);
 
     let app = Router::new()
         .route("/signup", post(signup::<AuthImpl>))

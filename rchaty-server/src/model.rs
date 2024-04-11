@@ -1,10 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BaseResp<T> {
     pub status: String,
     pub message: String,
     pub data: Option<T>,
+}
+
+impl Default for BaseResp<String> {
+    fn default() -> Self {
+        Self {
+            status: "200".to_string(),
+            message: "OK".to_string(),
+            data: Default::default(),
+        }
+    }
 }
 
 #[derive(Default, Debug, Serialize, Deserialize)]

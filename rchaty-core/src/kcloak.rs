@@ -1,7 +1,10 @@
 use std::{env::var, fmt::Display};
 
+use async_trait::async_trait;
 use dotenvy::dotenv;
-use keycloak::{KeycloakAdmin, KeycloakAdminToken};
+use keycloak::{KeycloakAdmin, KeycloakAdminToken, KeycloakTokenSupplier};
+
+use crate::BaseError;
 
 pub struct KcloakConfig {
     pub url: String,
@@ -38,39 +41,35 @@ impl Display for KcloakConfig {
 
 pub struct KcloakImpl {
     pub kconfig: KcloakConfig,
-    pub client: KeycloakAdmin,
 }
 
+#[async_trait]
 pub trait Kcloak {
-    fn get_client(&self) -> &KeycloakAdmin;
-    fn realm_name(&self) -> &str;
+    async fn get_client(&self) -> Result<KeycloakAdmin, BaseError>;
+    fn get_kconfig(&self) -> &KcloakConfig;
 }
 
+#[async_trait]
 impl Kcloak for KcloakImpl {
-    fn get_client(&self) -> &KeycloakAdmin {
-        &self.client
+    async fn get_client(&self) -> Result<KeycloakAdmin, BaseError> {
+        let req_client = reqwest::Client::new();
+        let token = KeycloakAdminToken::acquire(
+            &self.kconfig.url,
+            &self.kconfig.username,
+            &self.kconfig.password,
+            &req_client,
+        )
+        .await?;
+        Ok(KeycloakAdmin::new(&self.kconfig.url, token, req_client))
     }
 
-    fn realm_name(&self) -> &str {
-        &self.kconfig.realm
+    fn get_kconfig(&self) -> &KcloakConfig {
+        &self.kconfig
     }
 }
 
 impl KcloakImpl {
-    pub async fn new(kconfig: KcloakConfig) -> Self {
-        let client = reqwest::Client::new();
-        let kcloak_client_token = KeycloakAdminToken::acquire(
-            &kconfig.url,
-            &kconfig.username,
-            &kconfig.password,
-            &client,
-        )
-        .await
-        .expect("Error acquire token");
-        let kcloak_client = KeycloakAdmin::new(&kconfig.url, kcloak_client_token, client);
-        KcloakImpl {
-            kconfig,
-            client: kcloak_client,
-        }
+    pub async fn new(kconfig: KcloakConfig) -> Result<KcloakImpl, Box<dyn std::error::Error>> {
+        Ok(KcloakImpl { kconfig })
     }
 }

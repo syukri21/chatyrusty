@@ -1,14 +1,35 @@
+use keycloak::KeycloakError;
+
 #[derive(Debug)]
 pub struct BaseError {
-    code: usize,
-    messages: String,
+    pub code: usize,
+    pub messages: String,
 }
 
 impl From<keycloak::KeycloakError> for BaseError {
     fn from(value: keycloak::KeycloakError) -> Self {
-        BaseError {
-            code: 500,
-            messages: format!("{:?}", value),
+        match value {
+            KeycloakError::ReqwestFailure(_) => {
+                return BaseError {
+                    code: 500,
+                    messages: value.to_string(),
+                }
+            }
+            KeycloakError::HttpFailure { status, body, text } => {
+                if let Some(body) = body {
+                    let error_message = body.error_message.unwrap_or(text.clone());
+                    tracing::error!("{}", error_message);
+                    return BaseError {
+                        code: usize::from(status),
+                        messages: error_message,
+                    };
+                } else {
+                    return BaseError {
+                        code: usize::from(status),
+                        messages: text,
+                    };
+                }
+            }
         }
     }
 }
