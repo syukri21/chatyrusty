@@ -2,7 +2,7 @@ use std::{env::var, fmt::Display};
 
 use async_trait::async_trait;
 use dotenvy::dotenv;
-use keycloak::{KeycloakAdmin, KeycloakAdminToken, KeycloakTokenSupplier};
+use keycloak::{KeycloakAdmin, KeycloakAdminToken};
 
 use crate::BaseError;
 
@@ -41,35 +41,51 @@ impl Display for KcloakConfig {
 
 pub struct KcloakImpl {
     pub kconfig: KcloakConfig,
+    pub req_client: reqwest::Client,
 }
 
 #[async_trait]
 pub trait Kcloak {
-    async fn get_client(&self) -> Result<KeycloakAdmin, BaseError>;
+    async fn get_admin(&self) -> Result<KeycloakAdmin, BaseError>;
     fn get_kconfig(&self) -> &KcloakConfig;
+    async fn get_user_token(&self) -> Result<(), BaseError>;
 }
 
 #[async_trait]
 impl Kcloak for KcloakImpl {
-    async fn get_client(&self) -> Result<KeycloakAdmin, BaseError> {
-        let req_client = reqwest::Client::new();
+    async fn get_admin(&self) -> Result<KeycloakAdmin, BaseError> {
         let token = KeycloakAdminToken::acquire(
             &self.kconfig.url,
             &self.kconfig.username,
             &self.kconfig.password,
-            &req_client,
+            &self.get_req_client(),
         )
         .await?;
-        Ok(KeycloakAdmin::new(&self.kconfig.url, token, req_client))
+        Ok(KeycloakAdmin::new(
+            &self.kconfig.url,
+            token,
+            self.get_req_client(),
+        ))
     }
 
     fn get_kconfig(&self) -> &KcloakConfig {
         &self.kconfig
     }
+
+    async fn get_user_token(&self) -> Result<(), BaseError> {
+        todo!();
+    }
 }
 
 impl KcloakImpl {
     pub async fn new(kconfig: KcloakConfig) -> Result<KcloakImpl, Box<dyn std::error::Error>> {
-        Ok(KcloakImpl { kconfig })
+        Ok(KcloakImpl {
+            kconfig,
+            req_client: reqwest::Client::new(),
+        })
+    }
+
+    pub fn get_req_client(&self) -> reqwest::Client {
+        self.req_client.clone()
     }
 }

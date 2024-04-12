@@ -1,4 +1,7 @@
-use axum::{routing::post, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use handlers::signup;
 use rchaty_core::{
     kcloak::{KcloakConfig, KcloakImpl},
@@ -24,6 +27,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/signup", post(signup::<AuthImpl>))
+        .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
 
     let host = "0.0.0.0";

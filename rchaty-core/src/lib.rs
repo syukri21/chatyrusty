@@ -4,6 +4,8 @@ use async_trait::async_trait;
 use kcloak::Kcloak;
 use kcloak::KcloakImpl;
 use keycloak::types::UserRepresentation;
+use model::SigninParams;
+use model::SigninResult;
 
 pub use crate::model::BaseError;
 pub use crate::model::SignupParams;
@@ -28,12 +30,13 @@ impl AuthImpl {
 #[async_trait]
 pub trait Auth {
     async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError>;
+    async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError>;
 }
 
 #[async_trait]
 impl Auth for AuthImpl {
     async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError> {
-        let client = self.kcloak.get_client().await?;
+        let client = self.kcloak.get_admin().await?;
         tracing::info!("signup params: {:?}", params);
         client
             .realm_users_post(
@@ -56,5 +59,14 @@ impl Auth for AuthImpl {
             )
             .await?;
         Ok(SignupResult {})
+    }
+
+    async fn signin(&self, _params: SigninParams) -> Result<SigninResult, BaseError> {
+        let token = "token".to_string();
+        let ref_token = "refresh_token".to_string();
+        Ok(SigninResult {
+            token,
+            refresh_token: ref_token,
+        })
     }
 }

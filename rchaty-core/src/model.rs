@@ -50,3 +50,15 @@ pub struct SignupParams {
     pub email: String,
     pub password: String,
 }
+
+#[derive(Debug)]
+pub struct SigninParams {
+    pub username_or_email: String,
+    pub password: String,
+}
+
+#[derive(Debug)]
+pub struct SigninResult {
+    pub token: String,
+    pub refresh_token: String,
+}
