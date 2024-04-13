@@ -1,11 +1,9 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use dotenvy::var;
-use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 use crate::{
-    model::{SigninParams, Token},
+    model::{KcloakErrorResponse, SigninParams, Token},
     BaseError,
 };
 
@@ -49,12 +47,6 @@ pub trait KcloakClient {
     async fn token(&self, request: SigninParams) -> Result<Token, BaseError>;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct KcloakError {
-    error: String,
-    error_description: String,
-}
-
 #[async_trait]
 impl KcloakClient for KcloakClientImpl {
     async fn token(&self, request: SigninParams) -> Result<Token, BaseError> {
@@ -73,7 +65,7 @@ impl KcloakClient for KcloakClientImpl {
         if resp.status().is_success() {
             return Ok(resp.json::<Token>().await?);
         } else {
-            let errresp = resp.json::<KcloakError>().await?;
+            let errresp = resp.json::<KcloakErrorResponse>().await?;
             return Err(BaseError {
                 code: 500,
                 messages: errresp.error_description,

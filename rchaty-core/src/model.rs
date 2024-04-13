@@ -17,6 +17,12 @@ impl From<reqwest::Error> for BaseError {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct KcloakErrorResponse {
+    pub error: String,
+    pub error_description: String,
+}
+
 impl From<keycloak::KeycloakError> for BaseError {
     fn from(value: keycloak::KeycloakError) -> Self {
         match value {
