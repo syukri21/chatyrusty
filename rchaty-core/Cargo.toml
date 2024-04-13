@@ -10,4 +10,5 @@ async-trait = "0.1.79"
 tracing = "0.1.40"
 keycloak = "21.0.102"
 dotenvy = "0.15"
+serde ={ version = "1.0.197", features = ["derive"] } 
 reqwest = "0.11.27"

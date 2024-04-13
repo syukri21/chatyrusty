@@ -1,28 +1,32 @@
-use std::sync::Arc;
-
 use async_trait::async_trait;
 use kcloak::Kcloak;
 use kcloak::KcloakImpl;
+use kcloak_client::KcloakClient;
+use kcloak_client::KcloakClientImpl;
 use keycloak::types::UserRepresentation;
-use model::SigninParams;
-use model::SigninResult;
+use std::sync::Arc;
 
 pub use crate::model::BaseError;
+pub use crate::model::SigninParams;
+pub use crate::model::SigninResult;
 pub use crate::model::SignupParams;
 pub use crate::model::SignupResult;
 
 pub mod kcloak;
+pub mod kcloak_client;
 mod model;
 
 #[derive(Clone)]
 pub struct AuthImpl {
     kcloak: Arc<dyn Kcloak + Send + Sync>,
+    kcloak_client: Arc<dyn KcloakClient + Send + Sync>,
 }
 
 impl AuthImpl {
-    pub fn new(kcloak: KcloakImpl) -> Self {
+    pub fn new(kcloak: KcloakImpl, kcloak_client: KcloakClientImpl) -> Self {
         AuthImpl {
             kcloak: Arc::new(kcloak),
+            kcloak_client: Arc::new(kcloak_client),
         }
     }
 }
@@ -61,12 +65,12 @@ impl Auth for AuthImpl {
         Ok(SignupResult {})
     }
 
-    async fn signin(&self, _params: SigninParams) -> Result<SigninResult, BaseError> {
-        let token = "token".to_string();
-        let ref_token = "refresh_token".to_string();
+    async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError> {
+        let token = self.kcloak_client.token(params).await?;
         Ok(SigninResult {
-            token,
-            refresh_token: ref_token,
+            token: token.access_token,
+            refresh_token: token.refresh_token,
+            expires_in: token.expires_in,
         })
     }
 }

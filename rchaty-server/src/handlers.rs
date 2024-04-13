@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{extract::State, Json};
-use rchaty_core::Auth;
+use rchaty_core::{Auth, SigninParams, SigninResult};
 
 use crate::model::{BaseResp, SignupReq};
 
@@ -35,4 +35,30 @@ where
         });
     }
     Json(BaseResp::default())
+}
+
+pub async fn signin<S>(
+    State(service): State<S>,
+    Json(params): Json<SigninParams>,
+) -> Json<BaseResp<SigninResult>>
+where
+    S: Auth + Send + Sync,
+{
+    let resp = service.signin(params).await;
+    match resp {
+        Ok(resp) => {
+            return Json(BaseResp {
+                status: "200".to_string(),
+                message: "ok".to_string(),
+                data: Some(resp),
+            })
+        }
+        Err(e) => {
+            return Json(BaseResp {
+                status: e.code.to_string(),
+                message: e.messages,
+                data: None,
+            })
+        }
+    }
 }

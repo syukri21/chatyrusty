@@ -1,9 +1,20 @@
 use keycloak::KeycloakError;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub struct BaseError {
     pub code: usize,
     pub messages: String,
+}
+
+impl From<reqwest::Error> for BaseError {
+    fn from(value: reqwest::Error) -> Self {
+        tracing::debug!("reqwest error: {:?}", value);
+        return BaseError {
+            code: 500,
+            messages: value.to_string(),
+        };
+    }
 }
 
 impl From<keycloak::KeycloakError> for BaseError {
@@ -51,14 +62,22 @@ pub struct SignupParams {
     pub password: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SigninParams {
     pub username_or_email: String,
     pub password: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SigninResult {
     pub token: String,
     pub refresh_token: String,
+    pub expires_in: i64,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Token {
+    pub access_token: String,
+    pub refresh_token: String,
+    pub expires_in: i64,
 }
