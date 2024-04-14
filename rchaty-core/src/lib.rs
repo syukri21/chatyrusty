@@ -62,6 +62,7 @@ impl Auth for AuthImpl {
                         ..Default::default()
                     }]),
                     groups: Some(vec!["user".to_string()]),
+                    realm_roles: Some(vec!["user".to_string()]),
                     ..Default::default()
                 },
             )
