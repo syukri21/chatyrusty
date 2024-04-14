@@ -94,16 +94,6 @@ impl Auth for AuthImpl {
             });
         }
 
-        let email = match token_introspect.email {
-            Some(email) => email,
-            None => {
-                return Err(BaseError {
-                    code: 400,
-                    messages: "email not found".to_string(),
-                })
-            }
-        };
-
         let user_id = match token_introspect.sub {
             Some(user_id) => user_id,
             None => {
@@ -114,9 +104,7 @@ impl Auth for AuthImpl {
             }
         };
 
-        self.kcloak
-            .send_email_verification(&email, &user_id)
-            .await?;
+        self.kcloak.send_email_verification(&user_id).await?;
         Ok(())
     }
 }
