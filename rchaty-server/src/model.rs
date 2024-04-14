@@ -11,7 +11,7 @@ impl Default for BaseResp<String> {
     fn default() -> Self {
         Self {
             status: "200".to_string(),
-            message: "OK".to_string(),
+            message: Default::default(),
             data: Default::default(),
         }
     }

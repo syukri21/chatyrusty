@@ -87,3 +87,55 @@ pub struct Token {
     pub refresh_token: String,
     pub expires_in: i64,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TokenIntrospect {
+    pub exp: Option<i64>,
+    pub iat: Option<i64>,
+    pub jti: Option<String>,
+    pub iss: Option<String>,
+    pub aud: Option<String>,
+    pub sub: Option<String>,
+    pub typ: Option<String>,
+    pub azp: Option<String>,
+    #[serde(rename = "session_state")]
+    pub session_state: Option<String>,
+    pub name: Option<String>,
+    #[serde(rename = "given_name")]
+    pub given_name: Option<String>,
+    #[serde(rename = "family_name")]
+    pub family_name: Option<String>,
+    #[serde(rename = "preferred_username")]
+    pub preferred_username: Option<String>,
+    pub email: Option<String>,
+    #[serde(rename = "email_verified")]
+    pub email_verified: Option<bool>,
+    pub acr: Option<String>,
+    #[serde(rename = "allowed-origins")]
+    pub allowed_origins: Option<Vec<String>>,
+    #[serde(rename = "realm_access")]
+    pub realm_access: Option<RealmAccess>,
+    #[serde(rename = "resource_access")]
+    pub resource_access: Option<ResourceAccess>,
+    pub scope: Option<String>,
+    pub sid: Option<String>,
+    #[serde(rename = "client_id")]
+    pub client_id: Option<String>,
+    pub username: Option<String>,
+    pub active: bool,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RealmAccess {
+    pub roles: Vec<String>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ResourceAccess {
+    pub account: Account,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Account {
+    pub roles: Vec<String>,
+}

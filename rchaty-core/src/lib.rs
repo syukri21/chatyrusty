@@ -36,6 +36,7 @@ impl AuthImpl {
 pub trait Auth {
     async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError>;
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError>;
+    async fn send_verify_email(&self, token: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -73,5 +74,49 @@ impl Auth for AuthImpl {
             refresh_token: token.refresh_token,
             expires_in: token.expires_in,
         })
+    }
+
+    async fn send_verify_email(&self, token: &str) -> Result<(), BaseError> {
+        let token_introspect = self.kcloak_client.introspect(token).await?;
+        tracing::info!("token_introspect: {:?}", token_introspect);
+
+        if !token_introspect.active {
+            return Err(BaseError {
+                code: 400,
+                messages: "Token is invalid".to_string(),
+            });
+        }
+
+        if Some(true) == token_introspect.email_verified {
+            return Err(BaseError {
+                code: 400,
+                messages: "email already verified".to_string(),
+            });
+        }
+
+        let email = match token_introspect.email {
+            Some(email) => email,
+            None => {
+                return Err(BaseError {
+                    code: 400,
+                    messages: "email not found".to_string(),
+                })
+            }
+        };
+
+        let user_id = match token_introspect.sub {
+            Some(user_id) => user_id,
+            None => {
+                return Err(BaseError {
+                    code: 400,
+                    messages: "user_id not found".to_string(),
+                })
+            }
+        };
+
+        self.kcloak
+            .send_email_verification(&email, &user_id)
+            .await?;
+        Ok(())
     }
 }

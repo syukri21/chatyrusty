@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use axum::{extract::State, Json};
+use axum::{extract::State, http::HeaderMap, Json};
 use rchaty_core::{Auth, SigninParams, SigninResult};
 
 use crate::model::{BaseResp, SignupReq};
@@ -53,6 +53,30 @@ where
                 data: Some(resp),
             })
         }
+        Err(e) => {
+            return Json(BaseResp {
+                status: e.code.to_string(),
+                message: e.messages,
+                data: None,
+            })
+        }
+    }
+}
+
+pub async fn send_verify_email<S>(
+    headers: HeaderMap,
+    State(service): State<S>,
+) -> Json<BaseResp<String>>
+where
+    S: Auth + Send + Sync,
+{
+    let token: &str = headers
+        .get("Authorization")
+        .map_or_else(|| "", |v| v.to_str().unwrap_or(""));
+
+    let resp = service.send_verify_email(token).await;
+    match resp {
+        Ok(_) => return Json(BaseResp::default()),
         Err(e) => {
             return Json(BaseResp {
                 status: e.code.to_string(),

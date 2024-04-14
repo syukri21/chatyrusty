@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::{
     configuration::CoreConfiguration,
-    model::{KcloakErrorResponse, SigninParams, Token},
+    model::{KcloakErrorResponse, SigninParams, Token, TokenIntrospect},
     BaseError,
 };
 
@@ -43,6 +43,7 @@ impl KcloakClientImpl {
 #[async_trait]
 pub trait KcloakClient {
     async fn token(&self, request: SigninParams) -> Result<Token, BaseError>;
+    async fn introspect(&self, token: &str) -> Result<TokenIntrospect, BaseError>;
 }
 
 #[async_trait]
@@ -65,6 +66,32 @@ impl KcloakClient for KcloakClientImpl {
         let resp = self.req_client.post(url).form(&params).send().await?;
         if resp.status().is_success() {
             return Ok(resp.json::<Token>().await?);
+        } else {
+            let errresp = resp.json::<KcloakErrorResponse>().await?;
+            return Err(BaseError {
+                code: 500,
+                messages: errresp.error_description,
+            });
+        }
+    }
+
+    async fn introspect(&self, token: &str) -> Result<TokenIntrospect, BaseError> {
+        let path = format!(
+            "/realms/{}/protocol/openid-connect/token/introspect",
+            self.config.realm
+        );
+        let url = format!("{}{}", self.config.url, path);
+        tracing::debug!("request url: {}", url);
+        let token = token.replace("Bearer ", "");
+        let params = [
+            ("token", &token),
+            ("client_id", &self.config.client_id),
+            ("client_secret", &self.config.client_secret),
+        ];
+        tracing::debug!("request params: {:?}", params);
+        let resp = self.req_client.post(url).form(&params).send().await?;
+        if resp.status().is_success() {
+            return Ok(resp.json::<TokenIntrospect>().await?);
         } else {
             let errresp = resp.json::<KcloakErrorResponse>().await?;
             return Err(BaseError {
