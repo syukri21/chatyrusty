@@ -25,15 +25,10 @@ where
             password: params.password,
         })
         .await;
-
-    if let Err(e) = resp {
-        return Json(BaseResp {
-            status: e.code.to_string(),
-            message: e.messages,
-            ..Default::default()
-        });
+    match resp {
+        Ok(_) => return Json(BaseResp::ok("ok".to_string())),
+        Err(e) => return Json(BaseResp::err(e)),
     }
-    Json(BaseResp::default())
 }
 
 pub async fn signin<S>(
@@ -45,20 +40,8 @@ where
 {
     let resp = service.signin(params).await;
     match resp {
-        Ok(resp) => {
-            return Json(BaseResp {
-                status: "200".to_string(),
-                message: "ok".to_string(),
-                data: Some(resp),
-            })
-        }
-        Err(e) => {
-            return Json(BaseResp {
-                status: e.code.to_string(),
-                message: e.messages,
-                data: None,
-            })
-        }
+        Ok(resp) => return Json(BaseResp::ok(resp)),
+        Err(e) => return Json(BaseResp::err(e)),
     }
 }
 
@@ -72,16 +55,9 @@ where
     let token: &str = headers
         .get("Authorization")
         .map_or_else(|| "", |v| v.to_str().unwrap_or(""));
-
     let resp = service.send_verify_email(token).await;
     match resp {
-        Ok(_) => return Json(BaseResp::default()),
-        Err(e) => {
-            return Json(BaseResp {
-                status: e.code.to_string(),
-                message: e.messages,
-                data: None,
-            })
-        }
+        Ok(_) => return Json(BaseResp::ok("ok".to_string())),
+        Err(e) => return Json(BaseResp::err(e)),
     }
 }
