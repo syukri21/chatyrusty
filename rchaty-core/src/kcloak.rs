@@ -73,7 +73,18 @@ impl Kcloak for KcloakImpl {
     }
 
     async fn send_email_verification(&self, _email: String) -> Result<(), BaseError> {
-        todo!();
+        // let admin = self.get_admin().await?;
+        // admin.realm_users_with_id_execute_actions_email_put(
+        //     realm,
+        //     id,
+        //     client_id,
+        //     lifespan,
+        //     redirect_uri,
+        //     actions,
+        // )
+        //
+        // because we dont have client_id in client config i think we should create our own env to store it
+        todo!()
     }
 }
 
