@@ -61,6 +61,7 @@ impl KcloakClient for KcloakClientImpl {
             ("client_secret", &self.config.client_secret),
             ("username", &request.username_or_email),
             ("password", &request.password),
+            ("scope", "openid"),
         ];
         tracing::debug!("request params: {:?}", params);
         let resp = self.req_client.post(url).form(&params).send().await?;
