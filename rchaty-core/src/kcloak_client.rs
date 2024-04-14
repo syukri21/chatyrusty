@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use crate::{
     configuration::CoreConfiguration,
-    model::{KcloakErrorResponse, SigninParams, Token, TokenIntrospect},
+    model::{KcloakErrorResponse, SigninParams, Token, TokenIntrospect, UserInfo},
     BaseError,
 };
 
@@ -44,6 +44,7 @@ impl KcloakClientImpl {
 pub trait KcloakClient {
     async fn token(&self, request: SigninParams) -> Result<Token, BaseError>;
     async fn introspect(&self, token: &str) -> Result<TokenIntrospect, BaseError>;
+    async fn user_info(&self, token: &str) -> Result<UserInfo, BaseError>;
 }
 
 #[async_trait]
@@ -98,6 +99,30 @@ impl KcloakClient for KcloakClientImpl {
             return Err(BaseError {
                 code: 500,
                 messages: errresp.error_description,
+            });
+        }
+    }
+
+    async fn user_info(&self, token: &str) -> Result<UserInfo, BaseError> {
+        let path = format!(
+            "/realms/{}/protocol/openid-connect/userinfo",
+            self.config.realm
+        );
+        let url = format!("{}{}", self.config.url, path);
+        tracing::debug!("request url: {}", url);
+        let resp = self
+            .req_client
+            .get(url)
+            .header("Authorization", token)
+            .send()
+            .await?;
+
+        if resp.status().is_success() {
+            return Ok(resp.json::<UserInfo>().await?);
+        } else {
+            return Err(BaseError {
+                code: 500,
+                messages: "Token is invalid".to_string(),
             });
         }
     }

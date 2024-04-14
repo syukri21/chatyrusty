@@ -138,3 +138,14 @@ pub struct ResourceAccess {
 pub struct Account {
     pub roles: Vec<String>,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct UserInfo {
+    pub sub: String,
+    pub email_verified: bool,
+    pub name: String,
+    pub preferred_username: String,
+    pub given_name: String,
+    pub family_name: String,
+    pub email: String,
+}

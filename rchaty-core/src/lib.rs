@@ -80,38 +80,15 @@ impl Auth for AuthImpl {
     }
 
     async fn send_verify_email(&self, token: &str) -> Result<(), BaseError> {
-        let token_introspect = self.kcloak_client.introspect(token).await?;
-        tracing::info!("token_introspect: {:?}", token_introspect);
-
-        if !token_introspect.active {
-            return Err(BaseError {
-                code: 400,
-                messages: "Token is invalid".to_string(),
-            });
-        }
-
-        if Some(true) == token_introspect.email_verified {
+        let user_info = self.kcloak_client.user_info(token).await?;
+        tracing::debug!("user_info: {:?}", user_info);
+        if user_info.email_verified {
             return Err(BaseError {
                 code: 400,
                 messages: "email already verified".to_string(),
             });
         }
-
-        let user_id = match token_introspect.sub {
-            Some(user_id) => user_id,
-            None => {
-                return Err(BaseError {
-                    code: 400,
-                    messages: "user_id not found".to_string(),
-                })
-            }
-        };
-
-        self.kcloak.send_email_verification(&user_id).await?;
-
-        // todo
-        // after send email should revoke token
-        //
+        self.kcloak.send_email_verification(&user_info.sub).await?;
         Ok(())
     }
 }
