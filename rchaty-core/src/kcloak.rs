@@ -1,7 +1,6 @@
-use std::{env::var, fmt::Display, sync::Arc};
+use std::{fmt::Display, sync::Arc};
 
 use async_trait::async_trait;
-use dotenvy::dotenv;
 use keycloak::{KeycloakAdmin, KeycloakAdminToken};
 
 use crate::{configuration::CoreConfiguration, BaseError};
@@ -19,22 +18,6 @@ impl From<Arc<CoreConfiguration>> for KcloakConfig {
             realm: value.keycloak_realm.to_string(),
             username: value.keycloak_admin_username.to_string(),
             password: value.keycloak_admin_password.to_string(),
-        }
-    }
-}
-
-impl KcloakConfig {
-    pub fn from_env() -> Self {
-        dotenv().ok();
-        let url = var("KEYCLOAK_URL").expect("KEYCLOAK_URL must be set");
-        let username = var("KEYCLOAK_ADMIN").expect("KEYCLOAK_ADMIN must be set");
-        let password = var("KEYCLOAK_ADMIN_PASSWORD").expect("KEYCLOAK_ADMIN_PASSWORD must be set");
-        let realm = var("KEYCLOAK_REALM").expect("KEYCLOAK_REALM must be set");
-        KcloakConfig {
-            url,
-            realm,
-            username,
-            password,
         }
     }
 }
