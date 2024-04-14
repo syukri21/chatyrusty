@@ -10,7 +10,6 @@ pub use crate::model::BaseError;
 pub use crate::model::SigninParams;
 pub use crate::model::SigninResult;
 pub use crate::model::SignupParams;
-pub use crate::model::SignupResult;
 
 pub mod configuration;
 pub mod kcloak;
@@ -34,14 +33,14 @@ impl AuthImpl {
 
 #[async_trait]
 pub trait Auth {
-    async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError>;
+    async fn signup(&self, params: SignupParams) -> Result<(), BaseError>;
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError>;
     async fn send_verify_email(&self, token: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
 impl Auth for AuthImpl {
-    async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError> {
+    async fn signup(&self, params: SignupParams) -> Result<(), BaseError> {
         let client = self.kcloak.get_admin().await?;
         tracing::info!("signup params: {:?}", params);
         let email = Some(params.email);
@@ -67,7 +66,7 @@ impl Auth for AuthImpl {
                 },
             )
             .await?;
-        Ok(SignupResult {})
+        Ok(())
     }
 
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError> {
