@@ -44,22 +44,24 @@ impl Auth for AuthImpl {
     async fn signup(&self, params: SignupParams) -> Result<SignupResult, BaseError> {
         let client = self.kcloak.get_admin().await?;
         tracing::info!("signup params: {:?}", params);
+        let email = Some(params.email);
         client
             .realm_users_post(
                 &self.kcloak.get_kconfig().realm,
                 UserRepresentation {
                     enabled: Some(true),
-                    email: Some(params.email),
+                    email: email.clone(),
                     first_name: Some(params.first_name),
                     last_name: Some(params.last_name),
                     email_verified: Some(false),
-                    username: Some(params.username),
+                    username: email,
                     credentials: Some(vec![keycloak::types::CredentialRepresentation {
                         type_: Some("password".to_string()),
                         temporary: Some(false),
                         value: Some(params.password),
                         ..Default::default()
                     }]),
+                    groups: Some(vec!["user".to_string()]),
                     ..Default::default()
                 },
             )
@@ -105,6 +107,10 @@ impl Auth for AuthImpl {
         };
 
         self.kcloak.send_email_verification(&user_id).await?;
+
+        // todo
+        // after send email should revoke token
+        //
         Ok(())
     }
 }
