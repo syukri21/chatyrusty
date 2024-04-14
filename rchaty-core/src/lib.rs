@@ -12,6 +12,7 @@ pub use crate::model::SigninResult;
 pub use crate::model::SignupParams;
 pub use crate::model::SignupResult;
 
+pub mod configuration;
 pub mod kcloak;
 pub mod kcloak_client;
 mod model;

@@ -4,9 +4,7 @@ use axum::{
 };
 use handlers::{signin, signup};
 use rchaty_core::{
-    kcloak::{KcloakConfig, KcloakImpl},
-    kcloak_client::{KcloakClientConfig, KcloakClientImpl},
-    AuthImpl,
+    configuration::CoreConfiguration, kcloak::KcloakImpl, kcloak_client::KcloakClientImpl, AuthImpl,
 };
 use tokio::net::TcpListener;
 use tracing::info;
@@ -20,17 +18,22 @@ async fn main() {
         .with_max_level(tracing::Level::DEBUG)
         .init();
 
-    // Initialize Kcloak Client
+    // Initialize CoreConfiguration
+    let config = CoreConfiguration::from_env_arc();
 
-    let kcloak_client_config = KcloakClientConfig::from_env();
-    let kcloak_client =
-        KcloakClientImpl::new(kcloak_client_config).expect("Error initializing kcloak client");
+    // Initialize Auth
+    let auth = {
+        // Initialize Kcloak Client
+        let kcloak_client =
+            KcloakClientImpl::new(config.clone().into()).expect("Error initializing kcloak client");
 
-    let kcloak_config = KcloakConfig::from_env();
-    let kcloak = KcloakImpl::new(kcloak_config)
-        .await
-        .expect("Error initializing kcloak");
-    let auth = AuthImpl::new(kcloak, kcloak_client);
+        // Initialize Kcloak Admin
+        let kcloak = KcloakImpl::new(config.clone().into())
+            .await
+            .expect("Error initializing kcloak");
+
+        AuthImpl::new(kcloak, kcloak_client)
+    };
 
     let app = Router::new()
         .route("/signup", post(signup::<AuthImpl>))

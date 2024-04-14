@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use dotenvy::var;
 use std::sync::Arc;
 
 use crate::{
+    configuration::CoreConfiguration,
     model::{KcloakErrorResponse, SigninParams, Token},
     BaseError,
 };
@@ -12,18 +12,16 @@ pub struct KcloakClientConfig {
     pub client_id: String,
     client_secret: String,
     pub url: String,
+    realm: String,
 }
 
-impl KcloakClientConfig {
-    pub fn from_env() -> Self {
-        let client_id = var("KEYCLOAK_CLIENT_ID").expect("KEYCLOAK_CLIENT_ID must be set");
-        let client_secret =
-            var("KEYCLOAK_CLIENT_SECRET").expect("KEYCLOAK_CLIENT_SECRET must be set");
-        let url = var("KEYCLOAK_URL").expect("KEYCLOAK_URL must be set");
+impl From<Arc<CoreConfiguration>> for KcloakClientConfig {
+    fn from(config: Arc<CoreConfiguration>) -> Self {
         KcloakClientConfig {
-            client_id,
-            client_secret,
-            url,
+            client_id: config.keycloak_client_id.to_string(),
+            client_secret: config.keycloak_client_secret.to_string(),
+            url: config.keycloak_url.to_string(),
+            realm: config.keycloak_realm.to_string(),
         }
     }
 }
@@ -50,7 +48,10 @@ pub trait KcloakClient {
 #[async_trait]
 impl KcloakClient for KcloakClientImpl {
     async fn token(&self, request: SigninParams) -> Result<Token, BaseError> {
-        let path = "/realms/chaty/protocol/openid-connect/token";
+        let path = format!(
+            "/realms/{}/protocol/openid-connect/token",
+            self.config.realm
+        );
         let url = format!("{}{}", self.config.url, path);
         tracing::debug!("request url: {}", url);
         let params = [

@@ -1,16 +1,26 @@
-use std::{env::var, fmt::Display};
+use std::{env::var, fmt::Display, sync::Arc};
 
 use async_trait::async_trait;
 use dotenvy::dotenv;
 use keycloak::{KeycloakAdmin, KeycloakAdminToken};
 
-use crate::BaseError;
+use crate::{configuration::CoreConfiguration, BaseError};
 
 pub struct KcloakConfig {
     pub url: String,
     pub realm: String,
     pub username: String,
     pub password: String,
+}
+impl From<Arc<CoreConfiguration>> for KcloakConfig {
+    fn from(value: Arc<CoreConfiguration>) -> Self {
+        KcloakConfig {
+            url: value.keycloak_url.to_string(),
+            realm: value.keycloak_realm.to_string(),
+            username: value.keycloak_admin_username.to_string(),
+            password: value.keycloak_admin_password.to_string(),
+        }
+    }
 }
 
 impl KcloakConfig {
