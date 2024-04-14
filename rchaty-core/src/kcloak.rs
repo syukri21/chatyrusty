@@ -48,7 +48,7 @@ pub struct KcloakImpl {
 pub trait Kcloak {
     async fn get_admin(&self) -> Result<KeycloakAdmin, BaseError>;
     fn get_kconfig(&self) -> &KcloakConfig;
-    async fn get_user_token(&self) -> Result<(), BaseError>;
+    async fn send_email_verification(&self, email: String) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -72,7 +72,7 @@ impl Kcloak for KcloakImpl {
         &self.kconfig
     }
 
-    async fn get_user_token(&self) -> Result<(), BaseError> {
+    async fn send_email_verification(&self, _email: String) -> Result<(), BaseError> {
         todo!();
     }
 }
