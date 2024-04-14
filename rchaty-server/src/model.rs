@@ -11,8 +11,8 @@ impl Default for BaseResp<String> {
     fn default() -> Self {
         Self {
             status: "200".to_string(),
-            message: Default::default(),
-            data: Default::default(),
+            message: "ok".to_string(),
+            data: None,
         }
     }
 }
@@ -23,7 +23,6 @@ pub struct SignupReq {
     pub last_name: String,
     pub email: String,
     pub password: String,
-    pub username: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
