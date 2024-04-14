@@ -69,7 +69,7 @@ impl Kcloak for KcloakImpl {
 
     async fn send_email_verification(&self, _email: &str, user_id: &str) -> Result<(), BaseError> {
         let admin = self.get_admin().await?;
-        let actions = vec![format!("VERIFY_EMAIL")];
+        let actions = vec!["VERIFY_EMAIL".to_string()];
         let client_id = &self.kconfig.client_id;
         admin
             .realm_users_with_id_execute_actions_email_put(
