@@ -1,5 +1,5 @@
 pub mod configuration;
-pub mod database;
+pub mod db;
 pub mod kcloak;
 pub mod kcloak_client;
 pub mod model;
