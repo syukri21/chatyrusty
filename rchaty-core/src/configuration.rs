@@ -11,7 +11,11 @@ pub struct CoreConfiguration {
     pub keycloak_realm: String,
     pub keycloak_client_id: String,
     pub keycloak_client_secret: String,
-    pub database_url: String,
+    pub database_host: String,
+    pub database_port: u16,
+    pub database_user: String,
+    pub database_password: String,
+    pub database_name: String,
 }
 
 impl CoreConfiguration {
@@ -34,7 +38,14 @@ impl CoreConfiguration {
             var("KEYCLOAK_CLIENT_SECRET").expect("KEYCLOAK_CLIENT_SECRET must be set");
 
         // database
-        let database_url = var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let database_host = var("DATABASE_HOST").expect("DATABASE_HOST must be set");
+        let database_port = var("DATABASE_PORT")
+            .expect("DATABASE_PORT must be set")
+            .parse()
+            .expect("DATABASE_PORT must be a number");
+        let database_user = var("DATABASE_USER").expect("DATABASE_USER must be set");
+        let database_password = var("DATABASE_PASSWORD").expect("DATABASE_PASSWORD must be set");
+        let database_name = var("DATABASE_NAME").expect("DATABASE_NAME must be set");
 
         CoreConfiguration {
             app_redircet_send_verify_email_url,
@@ -44,7 +55,11 @@ impl CoreConfiguration {
             keycloak_realm,
             keycloak_client_id,
             keycloak_client_secret,
-            database_url,
+            database_host,
+            database_port,
+            database_user,
+            database_password,
+            database_name,
         }
     }
 

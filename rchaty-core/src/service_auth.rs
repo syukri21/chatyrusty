@@ -1,3 +1,5 @@
+use crate::db::repository::DBImpl;
+use crate::db::repository::DB;
 use crate::kcloak::Kcloak;
 use crate::kcloak::KcloakImpl;
 use crate::kcloak_client::KcloakClient;
@@ -14,13 +16,15 @@ use std::sync::Arc;
 pub struct AuthImpl {
     kcloak: Arc<dyn Kcloak + Send + Sync>,
     kcloak_client: Arc<dyn KcloakClient + Send + Sync>,
+    db: Arc<dyn DB + Send + Sync>,
 }
 
 impl AuthImpl {
-    pub fn new(kcloak: KcloakImpl, kcloak_client: KcloakClientImpl) -> Self {
+    pub fn new(kcloak: KcloakImpl, kcloak_client: KcloakClientImpl, db: DBImpl) -> Self {
         AuthImpl {
             kcloak: Arc::new(kcloak),
             kcloak_client: Arc::new(kcloak_client),
+            db: Arc::new(db),
         }
     }
 }
@@ -41,6 +45,12 @@ impl Auth for AuthImpl {
         let _ = self.kcloak.send_email_verification(&user_id).await;
 
         // TODO: save user representation to db
+        let client = self.db.get_client().query("SELECT 1", &[]).await;
+        match client {
+            Ok(_) => {}
+            Err(_) => return Err(BaseError{ code: 500, messages: "error call client".into() })
+        }
+
         Ok(())
     }
 

@@ -4,7 +4,8 @@ use axum::{
     Router,
 };
 use rchaty_core::{
-    configuration::CoreConfiguration, kcloak::KcloakImpl, kcloak_client::KcloakClientImpl, AuthImpl,
+    configuration::CoreConfiguration, db::repository::DBImpl, kcloak::KcloakImpl,
+    kcloak_client::KcloakClientImpl, AuthImpl,
 };
 use tokio::net::TcpListener;
 use tracing::info;
@@ -17,6 +18,9 @@ pub async fn run() {
     // Initialize CoreConfiguration
     let config = CoreConfiguration::from_env_arc();
 
+    // Initialize DB
+    let db = DBImpl::connect(config.clone().into()).await;
+
     // Initialize Auth
     let auth = {
         // Initialize Kcloak Client
@@ -28,7 +32,7 @@ pub async fn run() {
             .await
             .expect("Error initializing kcloak");
 
-        AuthImpl::new(kcloak, kcloak_client)
+        AuthImpl::new(kcloak, kcloak_client, db)
     };
 
     let app = Router::new()
