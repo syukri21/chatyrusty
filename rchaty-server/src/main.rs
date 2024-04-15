@@ -9,7 +9,7 @@ use rchaty_core::{
 use tokio::net::TcpListener;
 use tracing::info;
 
-use crate::handlers::send_verify_email;
+use crate::handlers::{revoke_token, send_verify_email};
 
 mod handlers;
 mod model;
@@ -41,6 +41,7 @@ async fn main() {
         .route("/signup", post(signup::<AuthImpl>))
         .route("/signin", post(signin::<AuthImpl>))
         .route("/send-verify-email", get(send_verify_email::<AuthImpl>))
+        .route("/revoke-token", post(revoke_token::<AuthImpl>))
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
 

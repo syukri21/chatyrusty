@@ -36,6 +36,7 @@ pub trait Auth {
     async fn signup(&self, params: SignupParams) -> Result<(), BaseError>;
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError>;
     async fn send_verify_email(&self, token: &str) -> Result<(), BaseError>;
+    async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -87,7 +88,10 @@ impl Auth for AuthImpl {
                 messages: "email already verified".to_string(),
             });
         }
-        self.kcloak.send_email_verification(&user_info.sub).await?;
-        Ok(())
+        Ok(self.kcloak.send_email_verification(&user_info.sub).await?)
+    }
+
+    async fn revoke_token(&self, token: &str) -> Result<(), BaseError> {
+        Ok(self.kcloak_client.revoke_token(token).await?)
     }
 }

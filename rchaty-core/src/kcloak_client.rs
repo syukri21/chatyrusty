@@ -45,6 +45,7 @@ pub trait KcloakClient {
     async fn token(&self, request: SigninParams) -> Result<Token, BaseError>;
     async fn introspect(&self, token: &str) -> Result<TokenIntrospect, BaseError>;
     async fn user_info(&self, token: &str) -> Result<UserInfo, BaseError>;
+    async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -123,6 +124,31 @@ impl KcloakClient for KcloakClientImpl {
             return Err(BaseError {
                 code: 500,
                 messages: "Token is invalid".to_string(),
+            });
+        }
+    }
+    async fn revoke_token(&self, token: &str) -> Result<(), BaseError> {
+        let path = format!(
+            "/realms/{}/protocol/openid-connect/revoke",
+            self.config.realm
+        );
+        let url = format!("{}{}", self.config.url, path);
+        tracing::debug!("request url: {}", url);
+        let params = [
+            ("client_id", &self.config.client_id),
+            ("client_secret", &self.config.client_secret),
+            ("token", &token.to_string()),
+            ("token_type_hint", &"access_token".to_string()),
+        ];
+        let resp = self.req_client.post(url).form(&params).send().await?;
+
+        if resp.status().is_success() {
+            return Ok(());
+        } else {
+            let errresp = resp.json::<KcloakErrorResponse>().await?;
+            return Err(BaseError {
+                code: 500,
+                messages: errresp.error_description,
             });
         }
     }

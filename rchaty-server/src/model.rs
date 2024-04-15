@@ -25,6 +25,13 @@ impl<T> BaseResp<T> {
             data: None,
         }
     }
+    pub fn ok_none() -> Self {
+        Self {
+            status: "200".to_string(),
+            message: "ok".to_string(),
+            data: None,
+        }
+    }
 }
 
 impl Default for BaseResp<String> {

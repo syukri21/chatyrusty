@@ -19,7 +19,7 @@ where
 {
     let resp = service.signup(params).await;
     match resp {
-        Ok(_) => return Json(BaseResp::ok("ok".to_string())),
+        Ok(_) => return Json(BaseResp::ok_none()),
         Err(e) => return Json(BaseResp::err(e)),
     }
 }
@@ -50,7 +50,22 @@ where
         .map_or_else(|| "", |v| v.to_str().unwrap_or(""));
     let resp = service.send_verify_email(token).await;
     match resp {
-        Ok(_) => return Json(BaseResp::ok("ok".to_string())),
+        Ok(_) => return Json(BaseResp::ok_none()),
+        Err(e) => return Json(BaseResp::err(e)),
+    }
+}
+
+pub async fn revoke_token<S>(headers: HeaderMap, State(service): State<S>) -> Json<BaseResp<()>>
+where
+    S: Auth + Send + Sync,
+{
+    let token: &str = headers
+        .get("Authorization")
+        .map_or_else(|| "", |v| v.to_str().unwrap_or(""));
+    let token = token.replace("Bearer ", "");
+    let resp = service.revoke_token(&token).await;
+    match resp {
+        Ok(_) => return Json(BaseResp::ok_none()),
         Err(e) => return Json(BaseResp::err(e)),
     }
 }
