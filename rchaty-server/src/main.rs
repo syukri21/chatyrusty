@@ -44,6 +44,7 @@ async fn main() {
         .route("/revoke-token", post(revoke_token::<AuthImpl>))
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
+    let v1 = Router::new().nest("/v1", app);
 
     let host = "0.0.0.0";
     let port = 3000;
@@ -52,7 +53,7 @@ async fn main() {
         .expect("Failed to bind to 0.0.0.0:3000");
 
     info!("Listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app)
+    axum::serve(listener, v1)
         .await
         .expect("Failed to start server");
 }
