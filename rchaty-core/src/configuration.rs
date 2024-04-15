@@ -19,8 +19,8 @@ impl CoreConfiguration {
         dotenv().ok();
 
         // app
-        let app_redircet_send_verify_email_url = var("REDIRECT_SEND_VERIFY_EMAIL_URL")
-            .expect("REDIRECT_SEND_VERIFY_EMAIL_URL must be set");
+        let app_redircet_send_verify_email_url = var("APP_REDIRECT_SEND_VERIFY_EMAIL_URL")
+            .expect("APP_REDIRECT_SEND_VERIFY_EMAIL_URL must be set");
 
         // kcloak
         let keycloak_admin_username: String =
