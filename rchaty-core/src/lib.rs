@@ -3,7 +3,6 @@ use kcloak::Kcloak;
 use kcloak::KcloakImpl;
 use kcloak_client::KcloakClient;
 use kcloak_client::KcloakClientImpl;
-use keycloak::types::UserRepresentation;
 use std::sync::Arc;
 
 pub use crate::model::BaseError;
@@ -42,31 +41,11 @@ pub trait Auth {
 #[async_trait]
 impl Auth for AuthImpl {
     async fn signup(&self, params: SignupParams) -> Result<(), BaseError> {
-        let client = self.kcloak.get_admin().await?;
-        tracing::info!("signup params: {:?}", params);
-        let email = Some(params.email);
-        client
-            .realm_users_post(
-                &self.kcloak.get_kconfig().realm,
-                UserRepresentation {
-                    enabled: Some(true),
-                    email: email.clone(),
-                    first_name: Some(params.first_name),
-                    last_name: Some(params.last_name),
-                    email_verified: Some(false),
-                    username: email,
-                    credentials: Some(vec![keycloak::types::CredentialRepresentation {
-                        type_: Some("password".to_string()),
-                        temporary: Some(false),
-                        value: Some(params.password),
-                        ..Default::default()
-                    }]),
-                    groups: Some(vec!["user".to_string()]),
-                    realm_roles: Some(vec!["user".to_string()]),
-                    ..Default::default()
-                },
-            )
-            .await?;
+        let user = self.kcloak.add_user(params).await?;
+        let user_id = user.id.unwrap();
+        let _ = self.kcloak.send_email_verification(&user_id).await;
+
+        // TODO: save user representation to db
         Ok(())
     }
 

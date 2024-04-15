@@ -1,9 +1,9 @@
 use std::{fmt::Display, sync::Arc};
 
 use async_trait::async_trait;
-use keycloak::{KeycloakAdmin, KeycloakAdminToken};
+use keycloak::{types::UserRepresentation, KeycloakAdmin, KeycloakAdminToken};
 
-use crate::{configuration::CoreConfiguration, BaseError};
+use crate::{configuration::CoreConfiguration, BaseError, SignupParams};
 
 pub struct KcloakConfig {
     pub url: String,
@@ -44,6 +44,7 @@ pub trait Kcloak {
     async fn get_admin(&self) -> Result<KeycloakAdmin, BaseError>;
     fn get_kconfig(&self) -> &KcloakConfig;
     async fn send_email_verification(&self, user_id: &str) -> Result<(), BaseError>;
+    async fn add_user(&self, params: SignupParams) -> Result<UserRepresentation, BaseError>;
 }
 
 #[async_trait]
@@ -69,19 +70,69 @@ impl Kcloak for KcloakImpl {
 
     async fn send_email_verification(&self, user_id: &str) -> Result<(), BaseError> {
         let admin = self.get_admin().await?;
-        let actions = vec!["VERIFY_EMAIL".to_string()];
         let client_id = &self.kconfig.client_id;
         admin
-            .realm_users_with_id_execute_actions_email_put(
+            .realm_users_with_id_send_verify_email_put(
                 &self.kconfig.realm,
                 user_id,
                 Some(client_id.to_string()),
-                Some(600),
-                None,
-                actions,
+                Some("http://0.0.0.0:3000/home".to_string()),
             )
             .await?;
         Ok(())
+    }
+
+    async fn add_user(&self, params: SignupParams) -> Result<UserRepresentation, BaseError> {
+        let client = self.get_admin().await?;
+        tracing::info!("signup params: {:?}", params);
+        let email = Some(params.email);
+        client
+            .realm_users_post(
+                &self.get_kconfig().realm,
+                UserRepresentation {
+                    enabled: Some(true),
+                    email: email.clone(),
+                    first_name: Some(params.first_name),
+                    last_name: Some(params.last_name),
+                    email_verified: Some(false),
+                    username: email.clone(),
+                    credentials: Some(vec![keycloak::types::CredentialRepresentation {
+                        type_: Some("password".to_string()),
+                        temporary: Some(false),
+                        value: Some(params.password),
+                        ..Default::default()
+                    }]),
+                    groups: Some(vec!["user".to_string()]),
+                    realm_roles: Some(vec!["user".to_string()]),
+                    ..Default::default()
+                },
+            )
+            .await?;
+
+        let user = client
+            .realm_users_get(
+                &self.get_kconfig().realm,
+                None,
+                email,
+                Some(false),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(1),
+                None,
+                None,
+                None,
+            )
+            .await?
+            .get(0)
+            .unwrap()
+            .to_owned();
+
+        Ok(user)
     }
 }
 
