@@ -4,6 +4,7 @@ use dotenvy::{dotenv, var};
 
 #[derive(Debug, Clone)]
 pub struct CoreConfiguration {
+    pub app_redircet_send_verify_email_url: String,
     pub keycloak_admin_username: Arc<String>,
     pub keycloak_admin_password: Arc<String>,
     pub keycloak_url: String,
@@ -16,6 +17,12 @@ pub struct CoreConfiguration {
 impl CoreConfiguration {
     pub fn from_env() -> CoreConfiguration {
         dotenv().ok();
+
+        // app
+        let app_redircet_send_verify_email_url = var("REDIRECT_SEND_VERIFY_EMAIL_URL")
+            .expect("REDIRECT_SEND_VERIFY_EMAIL_URL must be set");
+
+        // kcloak
         let keycloak_admin_username: String =
             var("KEYCLOAK_ADMIN_USERNAME").expect("KEYCLOAK_ADMIN_USERNAME must be set");
         let keycloak_admin_password =
@@ -30,6 +37,7 @@ impl CoreConfiguration {
         let database_url = var("DATABASE_URL").expect("DATABASE_URL must be set");
 
         CoreConfiguration {
+            app_redircet_send_verify_email_url,
             keycloak_admin_username: Arc::new(keycloak_admin_username),
             keycloak_admin_password: Arc::new(keycloak_admin_password),
             keycloak_url,
