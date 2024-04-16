@@ -41,10 +41,19 @@ pub trait Auth {
 impl Auth for AuthImpl {
     async fn signup(&self, params: SignupParams) -> Result<(), BaseError> {
         let user = self.kcloak.add_user(params).await?;
-        let user_id = user.id.unwrap();
-        let _ = self.kcloak.send_email_verification(&user_id).await;
+        self.db.save_user(&user).await?;
 
-        // TODO: save user representation to db
+        // send email verification to user after signup
+        {
+            let user_id = Arc::new(user.id.to_owned().unwrap());
+            let kcloak = self.kcloak.clone();
+            tokio::spawn(async move {
+                let user_id = user_id.as_ref();
+                tracing::info!("send email verification for user_id: {:?}", user_id);
+                kcloak.send_email_verification(user_id).await.unwrap();
+            });
+        }
+
         Ok(())
     }
 

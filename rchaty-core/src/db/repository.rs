@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use keycloak::types::UserRepresentation;
+use uuid::Uuid;
 
 use crate::{configuration::CoreConfiguration, BaseError};
 
@@ -59,13 +61,31 @@ impl DBImpl {
 
 #[async_trait]
 pub trait DB {
-    async fn save_user(&self) -> Result<(), BaseError>;
+    async fn save_user(&self, user: &UserRepresentation) -> Result<(), BaseError>;
 }
 
 #[async_trait]
 impl DB for DBImpl {
-    async fn save_user(&self) -> Result<(), BaseError> {
-        let _client = &self.client;
+    async fn save_user(&self, user: &UserRepresentation) -> Result<(), BaseError> {
+        let user_id = {
+            let user_id = user.id.to_owned().unwrap();
+            Uuid::parse_str(&user_id)
+        }?;
+
+        let client = &self.client;
+        let row_affected = client
+            .execute(
+                "INSERT INTO users (user_id, first_name, last_name, email) VALUES ($1, $2, $3, $4)",
+                &[&user_id, &user.first_name, &user.last_name, &user.email],
+            )
+            .await?;
+
+        if row_affected == 0 {
+            return Err(BaseError {
+                code: 400,
+                messages: "user already exists".to_string(),
+            });
+        }
         Ok(())
     }
 }

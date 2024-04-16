@@ -7,6 +7,26 @@ pub struct BaseError {
     pub messages: String,
 }
 
+impl From<uuid::Error> for BaseError {
+    fn from(value: uuid::Error) -> Self {
+        tracing::debug!("uuid error: {:?}", value);
+        return BaseError {
+            code: 500,
+            messages: value.to_string(),
+        };
+    }
+}
+
+impl From<tokio_postgres::Error> for BaseError {
+    fn from(value: tokio_postgres::Error) -> Self {
+        tracing::debug!("postgres error: {:?}", value);
+        return BaseError {
+            code: 500,
+            messages: value.to_string(),
+        };
+    }
+}
+
 impl From<reqwest::Error> for BaseError {
     fn from(value: reqwest::Error) -> Self {
         tracing::debug!("reqwest error: {:?}", value);
