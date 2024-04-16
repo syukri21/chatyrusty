@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::handlers::{revoke_token, send_verify_email, signin, signup};
 use axum::{
     routing::{get, post},
@@ -19,16 +21,16 @@ pub async fn run() {
     let config = CoreConfiguration::from_env_arc();
 
     // Initialize DB
-    let db = DBImpl::connect(config.clone().into()).await;
+    let db = DBImpl::connect(Arc::clone(&config).into()).await;
 
     // Initialize Auth
     let auth = {
         // Initialize Kcloak Client
-        let kcloak_client =
-            KcloakClientImpl::new(config.clone().into()).expect("Error initializing kcloak client");
+        let kcloak_client = KcloakClientImpl::new(Arc::clone(&config).into())
+            .expect("Error initializing kcloak client");
 
         // Initialize Kcloak Admin
-        let kcloak = KcloakImpl::new(config.clone().into())
+        let kcloak = KcloakImpl::new(Arc::clone(&config).into())
             .await
             .expect("Error initializing kcloak");
 
