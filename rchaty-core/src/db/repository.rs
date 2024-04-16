@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::configuration::CoreConfiguration;
+use crate::{configuration::CoreConfiguration, BaseError};
 
 #[derive(Clone, Debug)]
 pub struct DBConfig {
@@ -59,15 +59,13 @@ impl DBImpl {
 
 #[async_trait]
 pub trait DB {
-    fn get_client(&self) -> &tokio_postgres::Client;
+    async fn save_user(&self) -> Result<(), BaseError>;
 }
 
 #[async_trait]
 impl DB for DBImpl {
-    fn get_client(&self) -> &tokio_postgres::Client {
-        &self.client
+    async fn save_user(&self) -> Result<(), BaseError> {
+        let _client = &self.client;
+        Ok(())
     }
 }
-
-
-

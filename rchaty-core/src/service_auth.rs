@@ -45,12 +45,6 @@ impl Auth for AuthImpl {
         let _ = self.kcloak.send_email_verification(&user_id).await;
 
         // TODO: save user representation to db
-        let client = self.db.get_client().query("SELECT 1", &[]).await;
-        match client {
-            Ok(_) => {}
-            Err(_) => return Err(BaseError{ code: 500, messages: "error call client".into() })
-        }
-
         Ok(())
     }
 
