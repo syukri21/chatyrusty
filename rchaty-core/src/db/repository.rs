@@ -62,6 +62,7 @@ impl DBImpl {
 #[async_trait]
 pub trait DB {
     async fn save_user(&self, user: &UserRepresentation) -> Result<(), BaseError>;
+    async fn update_verified_email(&self, user_id: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -84,6 +85,25 @@ impl DB for DBImpl {
             return Err(BaseError {
                 code: 400,
                 messages: "user already exists".to_string(),
+            });
+        }
+        Ok(())
+    }
+
+    async fn update_verified_email(&self, user_id: &str) -> Result<(), BaseError> {
+        let user_id = Uuid::parse_str(user_id)?;
+        let client = &self.client;
+        let row_affected = client
+            .execute(
+                "UPDATE users SET email_verified = true WHERE user_id = $1",
+                &[&user_id],
+            )
+            .await?;
+
+        if row_affected == 0 {
+            return Err(BaseError {
+                code: 400,
+                messages: "user not found".to_string(),
             });
         }
         Ok(())
