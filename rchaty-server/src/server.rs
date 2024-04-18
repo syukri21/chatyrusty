@@ -37,7 +37,7 @@ pub async fn run() {
         AuthImpl::new(kcloak, kcloak_client, db)
     };
 
-    let app = Router::new()
+    let api = Router::new()
         .route("/signup", post(signup::<AuthImpl>))
         .route("/signin", post(signin::<AuthImpl>))
         .route("/send-verify-email", get(send_verify_email::<AuthImpl>))
@@ -48,7 +48,7 @@ pub async fn run() {
         )
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
-    let v1 = Router::new().nest("/v1", app);
+    let v1 = Router::new().nest("/api/v1", api);
 
     let host = "0.0.0.0";
     let port = 3000;
