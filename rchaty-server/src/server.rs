@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::handlers::{revoke_token, send_verify_email, signin, signup};
+use crate::handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup};
 use axum::{
     routing::{get, post},
     Router,
@@ -42,6 +42,10 @@ pub async fn run() {
         .route("/signin", post(signin::<AuthImpl>))
         .route("/send-verify-email", get(send_verify_email::<AuthImpl>))
         .route("/revoke-token", post(revoke_token::<AuthImpl>))
+        .route(
+            "/callback-verified-email",
+            get(callback_verify_email::<AuthImpl>),
+        )
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
     let v1 = Router::new().nest("/v1", app);

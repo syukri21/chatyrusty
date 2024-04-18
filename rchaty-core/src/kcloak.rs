@@ -3,7 +3,11 @@ use std::{fmt::Display, sync::Arc};
 use async_trait::async_trait;
 use keycloak::{types::UserRepresentation, KeycloakAdmin, KeycloakAdminToken};
 
-use crate::{configuration::CoreConfiguration, BaseError, SignupParams};
+use crate::{
+    configuration::CoreConfiguration,
+    util::{hmac::HmacSignatureImpl, signature::Signature},
+    BaseError, SignupParams,
+};
 
 pub struct KcloakConfig {
     pub url: String,
@@ -49,6 +53,7 @@ pub trait Kcloak {
     fn get_kconfig(&self) -> &KcloakConfig;
     async fn send_email_verification(&self, user_id: &str) -> Result<(), BaseError>;
     async fn add_user(&self, params: SignupParams) -> Result<UserRepresentation, BaseError>;
+    async fn verify_signature(&self, data: &str, signature: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -75,7 +80,11 @@ impl Kcloak for KcloakImpl {
     async fn send_email_verification(&self, user_id: &str) -> Result<(), BaseError> {
         let admin = self.get_admin().await?;
         let client_id = &self.kconfig.client_id;
-        let redirect_uri = Some(self.kconfig.send_email_verification_redirect_uri.clone());
+        let redirect_uri = self.kconfig.send_email_verification_redirect_uri.to_owned();
+        let password = &self.kconfig.password;
+        let code = HmacSignatureImpl::new(password.to_owned().to_string()).sign(user_id)?;
+        let redirect_uri = format!("{}?token={}&user_id={}", redirect_uri, code, user_id);
+        let redirect_uri = Some(redirect_uri);
         admin
             .realm_users_with_id_send_verify_email_put(
                 &self.kconfig.realm,
@@ -138,6 +147,12 @@ impl Kcloak for KcloakImpl {
             .to_owned();
 
         Ok(user)
+    }
+
+    async fn verify_signature(&self, data: &str, signature: &str) -> Result<(), BaseError> {
+        let password = &self.kconfig.password;
+        tracing::info!("data: {}, signature: {}", data, signature);
+        HmacSignatureImpl::new(password.to_owned().to_string()).verify(data, signature)
     }
 }
 

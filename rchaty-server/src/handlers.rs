@@ -1,7 +1,12 @@
 use std::sync::Arc;
 
-use axum::{extract::State, http::HeaderMap, Json};
-use rchaty_core::{Auth, SigninParams, SigninResult, SignupParams};
+use axum::{
+    extract::{Query, State},
+    http::HeaderMap,
+    response::Redirect,
+    Json,
+};
+use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
 
 use crate::model::BaseResp;
 
@@ -67,5 +72,26 @@ where
     match resp {
         Ok(_) => return Json(BaseResp::ok_none()),
         Err(e) => return Json(BaseResp::err(e)),
+    }
+}
+
+pub async fn callback_verify_email<S>(
+    Query(params): Query<VerifiedEmailCallback>,
+    State(service): State<S>,
+) -> Redirect
+where
+    S: Auth + Send + Sync,
+{
+    let resp = service
+        .callback_verify_email(&params.user_id, &params.token)
+        .await;
+    match resp {
+        Ok(_) => {
+            return Redirect::to("/login");
+        }
+        Err(e) => {
+            let msg = format!("/error?msg={}", e);
+            return Redirect::to(&msg);
+        }
     }
 }

@@ -1,3 +1,5 @@
+use base64::DecodeError;
+use hmac::digest::MacError;
 use keycloak::KeycloakError;
 use serde::{Deserialize, Serialize};
 
@@ -5,6 +7,26 @@ use serde::{Deserialize, Serialize};
 pub struct BaseError {
     pub code: usize,
     pub messages: String,
+}
+
+impl From<MacError> for BaseError {
+    fn from(value: MacError) -> Self {
+        tracing::debug!("hmac error: {:?}", value);
+        return BaseError {
+            code: 400,
+            messages: "verified signature error".to_owned(),
+        };
+    }
+}
+
+impl From<DecodeError> for BaseError {
+    fn from(value: DecodeError) -> Self {
+        tracing::debug!("base64 error: {:?}", value);
+        return BaseError {
+            code: 500,
+            messages: "base64 decode error".to_string(),
+        };
+    }
 }
 
 impl From<uuid::Error> for BaseError {
@@ -166,4 +188,10 @@ pub struct UserInfo {
     pub given_name: String,
     pub family_name: String,
     pub email: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct VerifiedEmailCallback {
+    pub user_id: String,
+    pub token: String,
 }

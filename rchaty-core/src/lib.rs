@@ -4,6 +4,7 @@ pub mod kcloak;
 pub mod kcloak_client;
 pub mod model;
 pub mod service_auth;
+pub mod util;
 
 pub use crate::model::BaseError;
 pub use crate::model::SigninParams;

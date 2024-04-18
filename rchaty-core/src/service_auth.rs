@@ -35,6 +35,7 @@ pub trait Auth {
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError>;
     async fn send_verify_email(&self, token: &str) -> Result<(), BaseError>;
     async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
+    async fn callback_verify_email(&self, user_id: &str, token: &str) -> Result<(), BaseError>;
 }
 
 #[async_trait]
@@ -80,5 +81,12 @@ impl Auth for AuthImpl {
 
     async fn revoke_token(&self, token: &str) -> Result<(), BaseError> {
         Ok(self.kcloak_client.revoke_token(token).await?)
+    }
+
+    async fn callback_verify_email(&self, user_id: &str, token: &str) -> Result<(), BaseError> {
+        tracing::info!("user_id: {:?}, token: {:?}", user_id, token);
+        self.kcloak.verify_signature(user_id, token).await?;
+        self.db.update_verified_email(user_id).await?;
+        Ok(())
     }
 }
