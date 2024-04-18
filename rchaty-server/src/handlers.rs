@@ -86,9 +86,7 @@ where
         .callback_verify_email(&params.user_id, &params.token)
         .await;
     match resp {
-        Ok(_) => {
-            return Redirect::to("/login");
-        }
+        Ok(_) => return Redirect::to("/login"),
         Err(e) => {
             let msg = format!("/error?msg={}", e);
             return Redirect::to(&msg);
