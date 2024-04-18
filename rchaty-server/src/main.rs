@@ -1,5 +1,6 @@
 mod handlers;
 mod model;
+mod page_handlres;
 mod server;
 
 #[tokio::main]

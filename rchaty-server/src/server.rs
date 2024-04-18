@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup};
+use crate::{handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup}, page_handlres::error_page};
 use axum::{
     routing::{get, post},
     Router,
@@ -37,6 +37,7 @@ pub async fn run() {
         AuthImpl::new(kcloak, kcloak_client, db)
     };
 
+    // Initialize Router api
     let api = Router::new()
         .route("/signup", post(signup::<AuthImpl>))
         .route("/signin", post(signin::<AuthImpl>))
@@ -48,7 +49,9 @@ pub async fn run() {
         )
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
-    let v1 = Router::new().nest("/api/v1", api);
+    let app = Router::new()
+        .route( "/error", get(error_page))
+        .nest("/api/v1", api);
 
     let host = "0.0.0.0";
     let port = 3000;
@@ -57,7 +60,7 @@ pub async fn run() {
         .expect("Failed to bind to 0.0.0.0:3000");
 
     info!("Listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, v1)
+    axum::serve(listener, app)
         .await
         .expect("Failed to start server");
 }
