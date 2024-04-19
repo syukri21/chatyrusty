@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
-    page_handlres::{error_page, login_page},
+    page_handlres::{error_page, htmx_login_cliked, login_page},
 };
 use axum::{
     routing::{get, post},
@@ -54,7 +54,11 @@ pub async fn run() {
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
 
+    // Initialize Router htmx
+    let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
+
     let app = Router::new()
+        .nest("/htmx", htmx)
         .nest_service("/assets", ServeDir::new("assets"))
         .route("/error", get(error_page))
         .route("/login", get(login_page))
