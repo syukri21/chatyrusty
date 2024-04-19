@@ -1,6 +1,10 @@
 use askama::Template;
 use axum::{extract::Query, response::Html};
-use rchaty_web::{error::LoginTemplate, htmx::LoginClicked, ErrorTemplate};
+use rchaty_web::{
+    error::{LoginTemplate, Page404Template},
+    htmx::LoginClicked,
+    ErrorTemplate,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -24,6 +28,12 @@ pub async fn login_page() -> axum::response::Html<String> {
 
 pub async fn htmx_login_cliked() -> axum::response::Html<String> {
     let template = LoginClicked {};
+    let html = template.render().unwrap();
+    Html(html)
+}
+
+pub async fn page_404() -> axum::response::Html<String> {
+    let template = Page404Template {};
     let html = template.render().unwrap();
     Html(html)
 }

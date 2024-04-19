@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
-    page_handlres::{error_page, htmx_login_cliked, login_page},
+    page_handlres::{error_page, htmx_login_cliked, login_page, page_404},
 };
 use axum::{
     routing::{get, post},
@@ -63,6 +63,8 @@ pub async fn run() {
         .route("/error", get(error_page))
         .route("/login", get(login_page))
         .nest("/api/v1", api);
+
+    let app = app.fallback(page_404);
 
     let host = "0.0.0.0";
     let port = 3000;
