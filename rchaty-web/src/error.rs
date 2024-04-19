@@ -7,9 +7,5 @@ pub struct ErrorTemplate<'a> {
 }
 
 #[derive(Template)]
-#[template(path = "login.html")]
-pub struct LoginTemplate {}
-
-#[derive(Template)]
 #[template(path = "404.html")]
 pub struct Page404Template {}

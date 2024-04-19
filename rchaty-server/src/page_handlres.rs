@@ -1,10 +1,6 @@
 use askama::Template;
 use axum::{extract::Query, response::Html};
-use rchaty_web::{
-    error::{LoginTemplate, Page404Template},
-    htmx::LoginClicked,
-    ErrorTemplate,
-};
+use rchaty_web::{error::Page404Template, htmx::LoginClicked, page::LoginTemplate, ErrorTemplate};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Deserialize, Serialize)]
