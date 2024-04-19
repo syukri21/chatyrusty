@@ -11,7 +11,8 @@ rchaty-web = { path = "../rchaty-web" }
 
 axum = { version = "0.7.5", features = ["tracing"]}
 tokio = { version = "1.37.0", features = ["full"] }
-tower-http = { version = "0.5.2", features = ["trace"] } # "0.5.2"}
+tower = { version = "0.4.13", features = ["full"] }
+tower-http = { version = "0.5.2", features = ["trace", "fs"] } # "0.5.2"}
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.15", features = ["env-filter"] }
 serde ={ version = "1.0.197", features = ["derive"] } 

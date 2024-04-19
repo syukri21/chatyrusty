@@ -1,4 +1,5 @@
 .env
 target
+./style/node_modules
 ./docker/volumes
 

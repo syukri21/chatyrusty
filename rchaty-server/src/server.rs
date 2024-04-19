@@ -13,6 +13,7 @@ use rchaty_core::{
     kcloak_client::KcloakClientImpl, AuthImpl,
 };
 use tokio::net::TcpListener;
+use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing::info;
 
 pub async fn run() {
@@ -32,7 +33,7 @@ pub async fn run() {
         let kcloak_client = KcloakClientImpl::new(Arc::clone(&config).into())
             .expect("Error initializing kcloak client");
 
-        // Initialize Kcloak Admin
+        // Initialize Kcloak Adm n
         let kcloak = KcloakImpl::new(Arc::clone(&config).into())
             .await
             .expect("Error initializing kcloak");
@@ -52,7 +53,9 @@ pub async fn run() {
         )
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
+
     let app = Router::new()
+        .nest_service("/assets", ServeDir::new("assets"))
         .route("/error", get(error_page))
         .route("/login", get(login_page))
         .nest("/api/v1", api);
@@ -64,7 +67,7 @@ pub async fn run() {
         .expect("Failed to bind to 0.0.0.0:3000");
 
     info!("Listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app)
+    axum::serve(listener, app.layer(TraceLayer::new_for_http()))
         .await
         .expect("Failed to start server");
 }
