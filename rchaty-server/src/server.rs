@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup}, page_handlres::error_page};
+use crate::{
+    handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
+    page_handlres::{error_page, login_page},
+};
 use axum::{
     routing::{get, post},
     Router,
@@ -50,7 +53,8 @@ pub async fn run() {
         .route("/home", get(|| async { "This is your home" }))
         .with_state(auth);
     let app = Router::new()
-        .route( "/error", get(error_page))
+        .route("/error", get(error_page))
+        .route("/login", get(login_page))
         .nest("/api/v1", api);
 
     let host = "0.0.0.0";
