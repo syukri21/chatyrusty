@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
-    page_handlres::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
+    page_handler::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
 };
 use axum::{
     routing::{get, post},
@@ -43,16 +43,13 @@ pub async fn run() {
 
     // Initialize Router api
     let api = Router::new()
-        .route("/signup", post(signup::<AuthImpl>))
         .route("/signin", post(signin::<AuthImpl>))
         .route("/send-verify-email", get(send_verify_email::<AuthImpl>))
         .route("/revoke-token", post(revoke_token::<AuthImpl>))
         .route(
             "/callback-verified-email",
             get(callback_verify_email::<AuthImpl>),
-        )
-        .route("/home", get(|| async { "This is your home" }))
-        .with_state(auth);
+        );
 
     // Initialize Router htmx
     let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
@@ -62,8 +59,9 @@ pub async fn run() {
         .nest_service("/assets", ServeDir::new("assets"))
         .route("/error", get(error_page))
         .route("/login", get(login_page))
-        .route("/signup", get(signup_page))
-        .nest("/api/v1", api);
+        .route("/signup", get(signup_page).post(signup::<AuthImpl>))
+        .nest("/api/v1", api)
+        .with_state(auth);
 
     let app = app.fallback(page_404);
 

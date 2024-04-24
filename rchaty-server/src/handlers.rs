@@ -3,8 +3,8 @@ use std::sync::Arc;
 use axum::{
     extract::{Query, State},
     http::HeaderMap,
-    response::Redirect,
-    Json,
+    response::{Html, IntoResponse, Redirect, Response},
+    Form, Json,
 };
 use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
 
@@ -15,18 +15,29 @@ pub struct AppState {
     pub auth: Arc<dyn Auth + Send + Sync>,
 }
 
-pub async fn signup<S>(
-    State(service): State<S>,
-    Json(params): Json<SignupParams>,
-) -> Json<BaseResp<String>>
+pub enum RedirectOrHtml {
+    Redirect(Redirect),
+    Html(String),
+}
+
+impl IntoResponse for RedirectOrHtml {
+    fn into_response(self) -> Response {
+        match self {
+            RedirectOrHtml::Redirect(redirect) => redirect.into_response(),
+            RedirectOrHtml::Html(html) => Html(html).into_response(),
+        }
+    }
+}
+
+pub async fn signup<S>(State(service): State<S>, Form(params): Form<SignupParams>) -> RedirectOrHtml
 where
     S: Auth + Send + Sync,
 {
     let resp = service.signup(params).await;
-    match resp {
-        Ok(_) => return Json(BaseResp::ok_none()),
-        Err(e) => return Json(BaseResp::err(e)),
+    if let Err(e) = resp {
+        return RedirectOrHtml::Html(format!("/error?msg={}", e));
     }
+    RedirectOrHtml::Redirect(Redirect::to("/login"))
 }
 
 pub async fn signin<S>(
