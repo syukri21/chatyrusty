@@ -4,11 +4,11 @@ use askama::Template;
 use axum::{
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Redirect, Response},
+    response::{Html, IntoResponse, Redirect, Response},
     Form, Json,
 };
 use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
-use rchaty_web::htmx::Alert;
+use rchaty_web::htmx::{Alert, RedirectHtmx};
 
 use crate::model::BaseResp;
 
@@ -17,21 +17,24 @@ pub struct AppState {
     pub auth: Arc<dyn Auth + Send + Sync>,
 }
 
-pub enum RedirectOrHtml {
-    Redirect(Redirect),
+pub enum RedirectOrHtml<'a> {
+    Redirect(RedirectHtmx<'a>),
     Alert((StatusCode, Alert)),
 }
 
-impl<'a> IntoResponse for RedirectOrHtml {
+impl<'a> IntoResponse for RedirectOrHtml<'a> {
     fn into_response(self) -> Response {
         match self {
-            RedirectOrHtml::Redirect(redirect) => redirect.into_response(),
+            RedirectOrHtml::Redirect(redirect) => Html(redirect.render().unwrap()).into_response(),
             RedirectOrHtml::Alert((code, alert)) => (code, alert.render().unwrap()).into_response(),
         }
     }
 }
 
-pub async fn signup<S>(State(service): State<S>, Form(params): Form<SignupParams>) -> RedirectOrHtml
+pub async fn signup<'a, S>(
+    State(service): State<S>,
+    Form(params): Form<SignupParams>,
+) -> RedirectOrHtml<'a>
 where
     S: Auth + Send + Sync,
 {
@@ -40,11 +43,11 @@ where
         return RedirectOrHtml::Alert((
             StatusCode::INTERNAL_SERVER_ERROR,
             Alert {
-                message: e.to_string(),
+                message: e.messages,
             },
         ));
     }
-    RedirectOrHtml::Redirect(Redirect::to("/login"))
+    RedirectOrHtml::Redirect(RedirectHtmx::new("/login"))
 }
 
 pub async fn signin<S>(

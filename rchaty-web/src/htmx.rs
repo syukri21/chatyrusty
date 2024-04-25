@@ -9,3 +9,15 @@ pub struct LoginClicked {}
 pub struct Alert {
     pub message: String,
 }
+
+#[derive(Template)]
+#[template(path = "redirect.html")]
+pub struct RedirectHtmx<'a> {
+    pub url: &'a str,
+}
+
+impl<'a> RedirectHtmx<'a> {
+    pub fn new(url: &'a str) -> Self {
+        Self { url }
+    }
+}
