@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use askama::Template;
 use axum::{
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
@@ -7,6 +8,7 @@ use axum::{
     Form, Json,
 };
 use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
+use rchaty_web::htmx::Alert;
 
 use crate::model::BaseResp;
 
@@ -17,20 +19,14 @@ pub struct AppState {
 
 pub enum RedirectOrHtml {
     Redirect(Redirect),
-    Errr {
-        status_code: StatusCode,
-        message: String,
-    },
+    Alert((StatusCode, Alert)),
 }
 
-impl IntoResponse for RedirectOrHtml {
+impl<'a> IntoResponse for RedirectOrHtml {
     fn into_response(self) -> Response {
         match self {
             RedirectOrHtml::Redirect(redirect) => redirect.into_response(),
-            RedirectOrHtml::Errr {
-                status_code,
-                message,
-            } => (status_code, message).into_response(),
+            RedirectOrHtml::Alert((code, alert)) => (code, alert.render().unwrap()).into_response(),
         }
     }
 }
@@ -41,17 +37,12 @@ where
 {
     let resp = service.signup(params).await;
     if let Err(e) = resp {
-        return RedirectOrHtml::Errr {
-            status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            message: format!(
-                r#"
-    <div class="alert alert-danger" id="alert-error" role="alert">
-        <strong>{}</strong>
-    </div>
-                "#,
-                e.messages
-            ),
-        };
+        return RedirectOrHtml::Alert((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Alert {
+                message: e.to_string(),
+            },
+        ));
     }
     RedirectOrHtml::Redirect(Redirect::to("/login"))
 }
