@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Query, State},
-    http::HeaderMap,
-    response::{Html, IntoResponse, Redirect, Response},
+    http::{HeaderMap, StatusCode},
+    response::{IntoResponse, Redirect, Response},
     Form, Json,
 };
 use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
@@ -17,14 +17,20 @@ pub struct AppState {
 
 pub enum RedirectOrHtml {
     Redirect(Redirect),
-    Html(String),
+    Errr {
+        status_code: StatusCode,
+        message: String,
+    },
 }
 
 impl IntoResponse for RedirectOrHtml {
     fn into_response(self) -> Response {
         match self {
             RedirectOrHtml::Redirect(redirect) => redirect.into_response(),
-            RedirectOrHtml::Html(html) => Html(html).into_response(),
+            RedirectOrHtml::Errr {
+                status_code,
+                message,
+            } => (status_code, message).into_response(),
         }
     }
 }
@@ -35,7 +41,17 @@ where
 {
     let resp = service.signup(params).await;
     if let Err(e) = resp {
-        return RedirectOrHtml::Html(format!("/error?msg={}", e));
+        return RedirectOrHtml::Errr {
+            status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            message: format!(
+                r#"
+    <div class="alert alert-danger" id="alert-error" role="alert">
+        <strong>{}</strong>
+    </div>
+                "#,
+                e.messages
+            ),
+        };
     }
     RedirectOrHtml::Redirect(Redirect::to("/login"))
 }
