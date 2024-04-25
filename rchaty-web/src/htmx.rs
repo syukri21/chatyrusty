@@ -5,13 +5,13 @@ use askama::Template;
 pub struct LoginClicked {}
 
 #[derive(Template)]
-#[template(path = "alert.html")]
+#[template(path = "htmx/alert.html")]
 pub struct Alert {
     pub message: String,
 }
 
 #[derive(Template)]
-#[template(path = "redirect.html")]
+#[template(path = "htmx/redirect.html")]
 pub struct RedirectHtmx<'a> {
     pub url: &'a str,
 }
