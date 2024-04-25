@@ -101,6 +101,7 @@ impl std::fmt::Display for BaseError {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SignupParams {
+    pub username: String,
     pub first_name: String,
     pub last_name: String,
     pub email: String,

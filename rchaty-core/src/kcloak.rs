@@ -109,7 +109,7 @@ impl Kcloak for KcloakImpl {
                     first_name: Some(params.first_name),
                     last_name: Some(params.last_name),
                     email_verified: Some(false),
-                    username: email.clone(),
+                    username: Some(params.username),
                     credentials: Some(vec![keycloak::types::CredentialRepresentation {
                         type_: Some("password".to_string()),
                         temporary: Some(false),
