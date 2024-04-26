@@ -2,13 +2,14 @@ use std::sync::Arc;
 
 use askama::Template;
 use axum::{
+    body::Body,
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
-    response::{Html, IntoResponse, Redirect, Response},
+    response::{IntoResponse, Redirect, Response},
     Form, Json,
 };
 use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
-use rchaty_web::htmx::{Alert, RedirectHtmx};
+use rchaty_web::htmx::{Alert, VerifiedEmailChecker};
 
 use crate::model::BaseResp;
 
@@ -17,37 +18,18 @@ pub struct AppState {
     pub auth: Arc<dyn Auth + Send + Sync>,
 }
 
-pub enum RedirectOrHtml<'a> {
-    Redirect(RedirectHtmx<'a>),
-    Alert((StatusCode, Alert)),
-}
-
-impl<'a> IntoResponse for RedirectOrHtml<'a> {
-    fn into_response(self) -> Response {
-        match self {
-            RedirectOrHtml::Redirect(redirect) => Html(redirect.render().unwrap()).into_response(),
-            RedirectOrHtml::Alert((code, alert)) => (code, alert.render().unwrap()).into_response(),
-        }
-    }
-}
-
-pub async fn signup<'a, S>(
-    State(service): State<S>,
-    Form(params): Form<SignupParams>,
-) -> RedirectOrHtml<'a>
+pub async fn signup<S>(State(service): State<S>, Form(params): Form<SignupParams>) -> Response<Body>
 where
     S: Auth + Send + Sync,
 {
     let resp = service.signup(params).await;
-    if let Err(e) = resp {
-        return RedirectOrHtml::Alert((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Alert {
-                message: e.messages,
-            },
-        ));
+    match resp {
+        Ok(_resp) => return VerifiedEmailChecker::htmx().into_response(),
+        Err(e) => {
+            let alert = Alert::new(e.messages);
+            return (StatusCode::BAD_REQUEST, alert.render().unwrap()).into_response();
+        }
     }
-    RedirectOrHtml::Redirect(RedirectHtmx::new("/login"))
 }
 
 pub async fn signin<S>(
