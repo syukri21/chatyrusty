@@ -3,3 +3,5 @@ target
 ./style/node_modules
 ./docker/volumes
 
+
+.DS_Store
