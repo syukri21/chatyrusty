@@ -3,6 +3,7 @@ mod htmx_handler;
 mod model;
 mod page_handler;
 mod server;
+mod ws_handler;
 
 #[tokio::main]
 async fn main() {

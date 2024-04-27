@@ -1,8 +1,9 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
     page_handler::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
+    ws_handler::ws_handler,
 };
 use axum::{
     routing::{get, post},
@@ -53,9 +54,11 @@ pub async fn run() {
 
     // Initialize Router htmx
     let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
+    let ws = Router::new().route("/vsc", get(ws_handler));
 
     let app = Router::new()
         .nest("/htmx", htmx)
+        .nest("/ws", ws)
         .nest_service("/assets", ServeDir::new("assets"))
         .route("/error", get(error_page))
         .route("/login", get(login_page))
@@ -72,7 +75,11 @@ pub async fn run() {
         .expect("Failed to bind to 0.0.0.0:3000");
 
     info!("Listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app.layer(TraceLayer::new_for_http()))
-        .await
-        .expect("Failed to start server");
+    axum::serve(
+        listener,
+        app.layer(TraceLayer::new_for_http())
+            .into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await
+    .expect("Failed to start server");
 }
