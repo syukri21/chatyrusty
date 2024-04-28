@@ -3,7 +3,9 @@ use std::{net::SocketAddr, sync::Arc};
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
     page_handler::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
-    ws_handler::ws_handler,
+    ws_handler::{
+        email_verified_ch_test_handler, ws_handler, EmailVerifiedChannel, EmailVerifiedChannelTrait,
+    },
 };
 use axum::{
     routing::{get, post},
@@ -42,6 +44,8 @@ pub async fn run() {
         AuthImpl::new(kcloak, kcloak_client, db)
     };
 
+    let email_verified_channel = EmailVerifiedChannel::new();
+
     // Initialize Router api
     let api = Router::new()
         .route("/signin", post(signin::<AuthImpl>))
@@ -54,7 +58,10 @@ pub async fn run() {
 
     // Initialize Router htmx
     let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
-    let ws = Router::new().route("/vsc", get(ws_handler));
+    let ws = Router::new()
+        .route("/vsc", get(ws_handler))
+        .route("/vsc/test", get(email_verified_ch_test_handler))
+        .with_state(email_verified_channel);
 
     let app = Router::new()
         .nest("/htmx", htmx)
