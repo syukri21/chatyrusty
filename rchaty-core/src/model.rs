@@ -3,10 +3,22 @@ use hmac::digest::MacError;
 use keycloak::KeycloakError;
 use serde::{Deserialize, Serialize};
 
+use crate::EmailVerifiedMessage;
+
 #[derive(Debug)]
 pub struct BaseError {
     pub code: usize,
     pub messages: String,
+}
+
+impl From<tokio::sync::broadcast::error::SendError<EmailVerifiedMessage>> for BaseError {
+    fn from(value: tokio::sync::broadcast::error::SendError<EmailVerifiedMessage>) -> Self {
+        tracing::debug!("broadcast error: {:?}", value);
+        return BaseError {
+            code: 500,
+            messages: "broadcast error".to_owned(),
+        };
+    }
 }
 
 impl From<MacError> for BaseError {

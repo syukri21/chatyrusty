@@ -6,8 +6,7 @@ use axum::{
 };
 
 use axum_extra::{headers, TypedHeader};
-
-use crate::channel::{EmailVerifiedChannel, EmailVerifiedMessage};
+use rchaty_core::{Auth, EmailVerifiedChannel, EmailVerifiedMessage};
 
 #[derive(Clone)]
 pub struct WsAppState {
@@ -19,9 +18,9 @@ pub async fn mock_email_checker_handler<S>(
     State(cn): State<S>,
 ) -> impl IntoResponse
 where
-    S: EmailVerifiedChannel + Send + Sync + 'static,
+    S: Auth + Send + Sync + 'static,
 {
-    let tx = cn.sender();
+    let tx = cn.get_email_channel().sender();
     tracing::info!("user: {user_id}, sended");
     let res = tx.send(EmailVerifiedMessage {
         user_id: user_id.clone(),
@@ -44,7 +43,7 @@ pub async fn email_checker_handler<S>(
     State(channel): State<S>,
 ) -> impl IntoResponse
 where
-    S: EmailVerifiedChannel + Send + Sync + 'static,
+    S: Auth + Send + Sync + 'static,
 {
     let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
         user_agent.to_string()
@@ -59,12 +58,12 @@ where
     ws.on_upgrade(move |socket| email_checker_handler_socket::<S>(socket, user_id, channel))
 }
 
-async fn email_checker_handler_socket<T: EmailVerifiedChannel + Send + Sync>(
+async fn email_checker_handler_socket<T: Auth + Send + Sync>(
     mut socket: axum::extract::ws::WebSocket,
     user_id: String,
     cn: T,
 ) {
-    let mut rx = cn.receiver();
+    let mut rx = cn.get_email_channel().receiver();
     loop {
         let msg = rx.recv().await.unwrap();
         tracing::info!("{}: {}", user_id, msg.message);

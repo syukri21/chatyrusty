@@ -1,7 +1,6 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use crate::{
-    channel::EmailVerifiedChannelImpl,
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
     page_handler::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
     ws_handler::{email_checker_handler, mock_email_checker_handler},
@@ -12,7 +11,7 @@ use axum::{
 };
 use rchaty_core::{
     configuration::CoreConfiguration, db::repository::DBImpl, kcloak::KcloakImpl,
-    kcloak_client::KcloakClientImpl, AuthImpl,
+    kcloak_client::KcloakClientImpl, AuthImpl, EmailVerifiedChannelImpl,
 };
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
@@ -29,8 +28,7 @@ pub async fn run() {
     // Initialize DB
     let db = DBImpl::connect(Arc::clone(&config).into()).await;
 
-    //  seetup email chanel
-    let evchannel = EmailVerifiedChannelImpl::new();
+    // Initialize EmailVerifiedChannel
 
     // Initialize Auth
     let auth = {
@@ -43,7 +41,9 @@ pub async fn run() {
             .await
             .expect("Error initializing kcloak");
 
-        AuthImpl::new(kcloak, kcloak_client, db)
+        let email_channel = EmailVerifiedChannelImpl::new();
+
+        AuthImpl::new(kcloak, kcloak_client, db, email_channel)
     };
 
     // Initialize Router api
@@ -59,15 +59,11 @@ pub async fn run() {
     // Initialize Router htmx
     let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
     let ws = Router::new()
-        .route(
-            "/vsc/:user_id",
-            get(email_checker_handler::<EmailVerifiedChannelImpl>),
-        )
+        .route("/vsc/:user_id", get(email_checker_handler::<AuthImpl>))
         .route(
             "/vsc_mock/:user_id",
-            get(mock_email_checker_handler::<EmailVerifiedChannelImpl>),
-        )
-        .with_state(evchannel);
+            get(mock_email_checker_handler::<AuthImpl>),
+        );
 
     let app = Router::new()
         .nest("/htmx", htmx)

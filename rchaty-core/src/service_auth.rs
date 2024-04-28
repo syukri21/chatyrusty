@@ -5,6 +5,8 @@ use crate::kcloak::KcloakImpl;
 use crate::kcloak_client::KcloakClient;
 use crate::kcloak_client::KcloakClientImpl;
 use crate::BaseError;
+use crate::EmailVerifiedChannel;
+use crate::EmailVerifiedChannelImpl;
 use crate::SigninParams;
 use crate::SigninResult;
 use crate::SignupParams;
@@ -17,14 +19,21 @@ pub struct AuthImpl {
     kcloak: Arc<dyn Kcloak + Send + Sync>,
     kcloak_client: Arc<dyn KcloakClient + Send + Sync>,
     db: Arc<dyn DB + Send + Sync>,
+    email_channel: Arc<dyn EmailVerifiedChannel + Send + Sync>,
 }
 
 impl AuthImpl {
-    pub fn new(kcloak: KcloakImpl, kcloak_client: KcloakClientImpl, db: DBImpl) -> Self {
+    pub fn new(
+        kcloak: KcloakImpl,
+        kcloak_client: KcloakClientImpl,
+        db: DBImpl,
+        email_channel: EmailVerifiedChannelImpl,
+    ) -> Self {
         AuthImpl {
             kcloak: Arc::new(kcloak),
             kcloak_client: Arc::new(kcloak_client),
             db: Arc::new(db),
+            email_channel: Arc::new(email_channel),
         }
     }
 }
@@ -36,6 +45,7 @@ pub trait Auth {
     async fn send_verify_email(&self, token: &str) -> Result<(), BaseError>;
     async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
     async fn callback_verify_email(&self, user_id: &str, token: &str) -> Result<(), BaseError>;
+    fn get_email_channel(&self) -> Arc<dyn EmailVerifiedChannel + Send + Sync>;
 }
 
 #[async_trait]
@@ -87,6 +97,24 @@ impl Auth for AuthImpl {
         tracing::info!("user_id: {:?}, token: {:?}", user_id, token);
         self.kcloak.verify_signature(user_id, token).await?;
         self.db.update_verified_email(user_id).await?;
+        let res = self.email_channel.send(crate::EmailVerifiedMessage {
+            user_id: user_id.to_string(),
+            message: "verified".to_string(),
+        });
+        match res {
+            Ok(_) => {
+                let msg = format!("email verified for user_id: {}", user_id);
+                tracing::info!(msg)
+            }
+            Err(e) => {
+                let msg = format!("email verification failed: {:}", e);
+                tracing::error!(msg)
+            }
+        }
         Ok(())
+    }
+
+    fn get_email_channel(&self) -> Arc<dyn EmailVerifiedChannel + Send + Sync> {
+        Arc::clone(&self.email_channel)
     }
 }

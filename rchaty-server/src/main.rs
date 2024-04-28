@@ -1,4 +1,3 @@
-mod channel;
 mod handlers;
 mod htmx_handler;
 mod model;

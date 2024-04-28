@@ -1400,7 +1400,6 @@ dependencies = [
  "rchaty-web",
  "serde",
  "tokio",
- "tokio-tungstenite",
  "tower",
  "tower-http",
  "tracing",
