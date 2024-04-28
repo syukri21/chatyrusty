@@ -1,11 +1,10 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use crate::{
+    channel::EmailVerifiedChannelImpl,
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
     page_handler::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
-    ws_handler::{
-        email_verified_ch_test_handler, ws_handler, EmailVerifiedChannel, EmailVerifiedChannelTrait,
-    },
+    ws_handler::{email_checker_handler, mock_email_checker_handler},
 };
 use axum::{
     routing::{get, post},
@@ -21,7 +20,7 @@ use tracing::info;
 
 pub async fn run() {
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::DEBUG)
+        .with_max_level(tracing::Level::INFO)
         .init();
 
     // Initialize CoreConfiguration
@@ -29,6 +28,9 @@ pub async fn run() {
 
     // Initialize DB
     let db = DBImpl::connect(Arc::clone(&config).into()).await;
+
+    //  seetup email chanel
+    let evchannel = EmailVerifiedChannelImpl::new();
 
     // Initialize Auth
     let auth = {
@@ -44,8 +46,6 @@ pub async fn run() {
         AuthImpl::new(kcloak, kcloak_client, db)
     };
 
-    let email_verified_channel = EmailVerifiedChannel::new();
-
     // Initialize Router api
     let api = Router::new()
         .route("/signin", post(signin::<AuthImpl>))
@@ -59,9 +59,15 @@ pub async fn run() {
     // Initialize Router htmx
     let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
     let ws = Router::new()
-        .route("/vsc", get(ws_handler))
-        .route("/vsc/test", get(email_verified_ch_test_handler))
-        .with_state(email_verified_channel);
+        .route(
+            "/vsc/:user_id",
+            get(email_checker_handler::<EmailVerifiedChannelImpl>),
+        )
+        .route(
+            "/vsc_mock/:user_id",
+            get(mock_email_checker_handler::<EmailVerifiedChannelImpl>),
+        )
+        .with_state(evchannel);
 
     let app = Router::new()
         .nest("/htmx", htmx)

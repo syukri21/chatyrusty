@@ -19,4 +19,7 @@ serde ={ version = "1.0.197", features = ["derive"] }
 askama = {version = "0.12.1"}
 axum-extra = { version = "0.9.3", features = ["typed-header"] }
 async-mutex = "1.4.0"
-crossbeam-channel = "0.5.12"
+tokio-tungstenite = "0.21.0"
+headers = "0.4"
+futures = "0.3"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
