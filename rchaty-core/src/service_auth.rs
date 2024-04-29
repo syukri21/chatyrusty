@@ -40,7 +40,7 @@ impl AuthImpl {
 
 #[async_trait]
 pub trait Auth {
-    async fn signup(&self, params: SignupParams) -> Result<(), BaseError>;
+    async fn signup(&self, params: SignupParams) -> Result<String, BaseError>;
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError>;
     async fn send_verify_email(&self, token: &str) -> Result<(), BaseError>;
     async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
@@ -50,7 +50,7 @@ pub trait Auth {
 
 #[async_trait]
 impl Auth for AuthImpl {
-    async fn signup(&self, params: SignupParams) -> Result<(), BaseError> {
+    async fn signup(&self, params: SignupParams) -> Result<String, BaseError> {
         let user = self.kcloak.add_user(params).await?;
         self.db.save_user(&user).await?;
 
@@ -65,7 +65,7 @@ impl Auth for AuthImpl {
             });
         }
 
-        Ok(())
+        Ok(user.id.unwrap())
     }
 
     async fn signin(&self, params: SigninParams) -> Result<SigninResult, BaseError> {
@@ -99,7 +99,16 @@ impl Auth for AuthImpl {
         self.db.update_verified_email(user_id).await?;
         let res = self.email_channel.send(crate::EmailVerifiedMessage {
             user_id: user_id.to_string(),
-            message: "verified".to_string(),
+            message: r#"
+<div id="status">
+                Email verification successful.
+   <a href="/login" class="btn btn-primary" >
+    Login
+</a>
+</div>
+
+                "#
+            .to_string(),
         });
         match res {
             Ok(_) => {

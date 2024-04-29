@@ -24,7 +24,7 @@ where
 {
     let resp = service.signup(params).await;
     match resp {
-        Ok(_resp) => return VerifiedEmailChecker::htmx().into_response(),
+        Ok(user_id) => return VerifiedEmailChecker::htmx(user_id).into_response(),
         Err(e) => {
             let alert = Alert::new(e.messages);
             return (StatusCode::BAD_REQUEST, alert.render().unwrap()).into_response();

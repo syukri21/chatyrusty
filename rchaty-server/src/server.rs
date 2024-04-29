@@ -50,11 +50,7 @@ pub async fn run() {
     let api = Router::new()
         .route("/signin", post(signin::<AuthImpl>))
         .route("/send-verify-email", get(send_verify_email::<AuthImpl>))
-        .route("/revoke-token", post(revoke_token::<AuthImpl>))
-        .route(
-            "/callback-verified-email",
-            get(callback_verify_email::<AuthImpl>),
-        );
+        .route("/revoke-token", post(revoke_token::<AuthImpl>));
 
     // Initialize Router htmx
     let htmx = Router::new().route("/login_clicked", get(htmx_login_cliked));
@@ -72,6 +68,10 @@ pub async fn run() {
         .route("/error", get(error_page))
         .route("/login", get(login_page))
         .route("/signup", get(signup_page).post(signup::<AuthImpl>))
+        .route(
+            "/v1/callback-verified-email",
+            get(callback_verify_email::<AuthImpl>),
+        )
         .nest("/api/v1", api)
         .with_state(auth);
 

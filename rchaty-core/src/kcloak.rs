@@ -85,6 +85,8 @@ impl Kcloak for KcloakImpl {
         let code = HmacSignatureImpl::new(password.to_owned().to_string()).sign(user_id)?;
         let redirect_uri = format!("{}?token={}&user_id={}", redirect_uri, code, user_id);
         let redirect_uri = Some(redirect_uri);
+
+        tracing::info!("redirect_uri: {:?}", redirect_uri);
         admin
             .realm_users_with_id_send_verify_email_put(
                 &self.kconfig.realm,

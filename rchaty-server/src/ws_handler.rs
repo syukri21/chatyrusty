@@ -20,19 +20,33 @@ pub async fn mock_email_checker_handler<S>(
 where
     S: Auth + Send + Sync + 'static,
 {
-    let tx = cn.get_email_channel().sender();
+    let tx = cn.get_email_channel();
     tracing::info!("user: {user_id}, sended");
+
     let res = tx.send(EmailVerifiedMessage {
-        user_id: user_id.clone(),
-        message: "verified".to_string(),
+        user_id: user_id.to_string(),
+        message: r#"
+<div id="status">
+                Email verification successful.
+   <a href="/login" class="btn btn-primary" >
+    Login
+</a>
+</div>
+
+                "#
+        .to_string(),
     });
     match res {
-        Ok(_) => return format!("user: {user_id}, sended"),
+        Ok(_) => {
+            let msg = format!("email verified for user_id: {}", user_id);
+            tracing::info!(msg)
+        }
         Err(e) => {
-            tracing::error!("Error sending message: {}", e);
-            return format!("user: {user_id} Error sending message: {e}");
+            let msg = format!("email verification failed: {:}", e);
+            tracing::error!(msg)
         }
     }
+    "ok"
 }
 
 pub async fn email_checker_handler<S>(

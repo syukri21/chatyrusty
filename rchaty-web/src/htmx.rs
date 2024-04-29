@@ -30,11 +30,13 @@ impl<'a> RedirectHtmx<'a> {
 
 #[derive(Template)]
 #[template(path = "htmx/verified_email_checker.html")]
-pub struct VerifiedEmailChecker {}
+pub struct VerifiedEmailChecker {
+    pub user_id: String,
+}
 
 impl VerifiedEmailChecker {
-    pub fn htmx() -> String {
-        let template = VerifiedEmailChecker {};
+    pub fn htmx(user_id: String) -> String {
+        let template = VerifiedEmailChecker { user_id };
         template.render().unwrap()
     }
 }
