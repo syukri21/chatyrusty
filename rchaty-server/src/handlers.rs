@@ -8,8 +8,11 @@ use axum::{
     response::{IntoResponse, Redirect, Response},
     Form, Json,
 };
-use rchaty_core::{model::VerifiedEmailCallback, Auth, SigninParams, SigninResult, SignupParams};
-use rchaty_web::htmx::{Alert, VerifiedEmailChecker};
+use rchaty_core::{
+    model::VerifiedEmailCallback, Auth, EmailVerifiedMessage, SigninParams, SigninResult,
+    SignupParams,
+};
+use rchaty_web::htmx::{Alert, VerifiedEmailChecker, VerifiedEmailSuccess};
 
 use crate::model::BaseResp;
 
@@ -88,6 +91,20 @@ where
     let resp = service
         .callback_verify_email(&params.user_id, &params.token)
         .await;
+    let res = service.get_email_channel().send(EmailVerifiedMessage {
+        user_id: params.user_id.to_string(),
+        message: VerifiedEmailSuccess::htmx(),
+    });
+    match res {
+        Ok(_) => {
+            let msg = format!("email verified for user_id: {}", &params.user_id);
+            tracing::info!(msg)
+        }
+        Err(e) => {
+            let msg = format!("email verification failed: {:}", e);
+            tracing::error!(msg)
+        }
+    }
     match resp {
         Ok(_) => return Redirect::to("/login"),
         Err(e) => {

@@ -7,6 +7,7 @@ use axum::{
 
 use axum_extra::{headers, TypedHeader};
 use rchaty_core::{Auth, EmailVerifiedChannel, EmailVerifiedMessage};
+use rchaty_web::htmx::VerifiedEmailSuccess;
 
 #[derive(Clone)]
 pub struct WsAppState {
@@ -22,19 +23,9 @@ where
 {
     let tx = cn.get_email_channel();
     tracing::info!("user: {user_id}, sended");
-
     let res = tx.send(EmailVerifiedMessage {
         user_id: user_id.to_string(),
-        message: r#"
-<div id="status">
-                Email verification successful.
-   <a href="/login" class="btn btn-primary" >
-    Login
-</a>
-</div>
-
-                "#
-        .to_string(),
+        message: VerifiedEmailSuccess::htmx(),
     });
     match res {
         Ok(_) => {

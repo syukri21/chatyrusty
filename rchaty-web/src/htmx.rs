@@ -40,3 +40,14 @@ impl VerifiedEmailChecker {
         template.render().unwrap()
     }
 }
+
+#[derive(Template)]
+#[template(path = "htmx/verified_email_success.html")]
+pub struct VerifiedEmailSuccess {}
+
+impl VerifiedEmailSuccess {
+    pub fn htmx() -> String {
+        let template = VerifiedEmailSuccess {};
+        template.render().unwrap()
+    }
+}

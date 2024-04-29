@@ -97,29 +97,6 @@ impl Auth for AuthImpl {
         tracing::info!("user_id: {:?}, token: {:?}", user_id, token);
         self.kcloak.verify_signature(user_id, token).await?;
         self.db.update_verified_email(user_id).await?;
-        let res = self.email_channel.send(crate::EmailVerifiedMessage {
-            user_id: user_id.to_string(),
-            message: r#"
-<div id="status">
-                Email verification successful.
-   <a href="/login" class="btn btn-primary" >
-    Login
-</a>
-</div>
-
-                "#
-            .to_string(),
-        });
-        match res {
-            Ok(_) => {
-                let msg = format!("email verified for user_id: {}", user_id);
-                tracing::info!(msg)
-            }
-            Err(e) => {
-                let msg = format!("email verification failed: {:}", e);
-                tracing::error!(msg)
-            }
-        }
         Ok(())
     }
 
