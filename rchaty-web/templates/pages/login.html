@@ -3,18 +3,19 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<main class="form-signin w-100 m-auto">
-  <form>
+<main class="form-signin w-100 m-auto" id="main"  hx-ext="response-targets">
+  <form hx-post="/login" hx-target="#main" hx-target-error="#alert" >
     <img class="mb-4" src="/assets/image/logo.png" alt="" width="144" height="57">
     <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
 
+    <div id="alert"></div>
     <div class="form-floating">
-      <input type="email" class="form-start form-control" id="floatingInput" placeholder="name@example.com">
-      <label for="floatingInput">Email address</label>
+      <input type="email" class="form-control form-start" id="username_or_email" placeholder="name@example.com" name="username_or_email">
+      <label for="username_or_email">Email address</label>
     </div>
     <div class="form-floating">
-      <input type="password" class="form-bottom form-control" id="floatingPassword" placeholder="Password">
-      <label for="floatingPassword">Password</label>
+      <input type="password" class="form-control form-bottom" id="password" name="password" placeholder="Password">
+      <label for="password">Password</label>
     </div>
 
     <div class="form-check text-start my-3">
@@ -23,7 +24,7 @@
         Remember me
       </label>
     </div>
-    <button class="btn btn-primary w-100 py-2" type="button" hx-get="/htmx/login_clicked" hx-trigger="click" hx-target="#parent-div" hx-swap="innerHTML" >
+    <button class="btn btn-primary w-100 py-2" type="submit">
       Sign in</button>
     <p class="mt-5 mb-3 text-body-secondary">© 2017–2024</p>
   </form>

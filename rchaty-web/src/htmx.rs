@@ -11,8 +11,8 @@ pub struct Alert {
 }
 
 impl Alert {
-    pub fn new(message: String) -> Self {
-        Self { message }
+    pub fn htmx(message: String) -> String {
+        Alert { message }.render().unwrap()
     }
 }
 
@@ -23,8 +23,8 @@ pub struct RedirectHtmx<'a> {
 }
 
 impl<'a> RedirectHtmx<'a> {
-    pub fn new(url: &'a str) -> Self {
-        Self { url }
+    pub fn htmx(url: &'a str) -> String {
+        RedirectHtmx { url }.render().unwrap()
     }
 }
 

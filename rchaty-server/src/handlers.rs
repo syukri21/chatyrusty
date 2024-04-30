@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use askama::Template;
 use axum::{
     body::Body,
     extract::{Query, State},
@@ -9,10 +8,9 @@ use axum::{
     Form, Json,
 };
 use rchaty_core::{
-    model::VerifiedEmailCallback, Auth, EmailVerifiedMessage, SigninParams, SigninResult,
-    SignupParams,
+    model::VerifiedEmailCallback, Auth, EmailVerifiedMessage, SigninParams, SignupParams,
 };
-use rchaty_web::htmx::{Alert, VerifiedEmailChecker, VerifiedEmailSuccess};
+use rchaty_web::htmx::{Alert, RedirectHtmx, VerifiedEmailChecker, VerifiedEmailSuccess};
 
 use crate::model::BaseResp;
 
@@ -28,24 +26,19 @@ where
     let resp = service.signup(params).await;
     match resp {
         Ok(user_id) => return VerifiedEmailChecker::htmx(user_id).into_response(),
-        Err(e) => {
-            let alert = Alert::new(e.messages);
-            return (StatusCode::BAD_REQUEST, alert.render().unwrap()).into_response();
-        }
+        Err(e) => return (StatusCode::BAD_REQUEST, Alert::htmx(e.messages)).into_response(),
     }
 }
 
-pub async fn signin<S>(
-    State(service): State<S>,
-    Json(params): Json<SigninParams>,
-) -> Json<BaseResp<SigninResult>>
+pub async fn signin<S>(State(service): State<S>, Form(params): Form<SigninParams>) -> Response<Body>
 where
     S: Auth + Send + Sync,
 {
     let resp = service.signin(params).await;
+    tracing::info!("resp: {:?}", resp);
     match resp {
-        Ok(resp) => return Json(BaseResp::ok(resp)),
-        Err(e) => return Json(BaseResp::err(e)),
+        Ok(_) => return RedirectHtmx::htmx("/home").into_response(),
+        Err(e) => return (StatusCode::BAD_REQUEST, Alert::htmx(e.messages)).into_response(),
     }
 }
 

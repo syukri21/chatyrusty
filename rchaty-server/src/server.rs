@@ -48,7 +48,6 @@ pub async fn run() {
 
     // Initialize Router api
     let api = Router::new()
-        .route("/signin", post(signin::<AuthImpl>))
         .route("/send-verify-email", get(send_verify_email::<AuthImpl>))
         .route("/revoke-token", post(revoke_token::<AuthImpl>));
 
@@ -63,7 +62,7 @@ pub async fn run() {
 
     let app = Router::new()
         .route("/error", get(error_page))
-        .route("/login", get(login_page))
+        .route("/login", get(login_page).post(signin::<AuthImpl>))
         .route("/signup", get(signup_page).post(signup::<AuthImpl>))
         .route("/home", get(home_page))
         .route("/", get(home_page))

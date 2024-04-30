@@ -11,13 +11,6 @@ pub struct BaseResp<T> {
 pub trait InnerDataTrait {}
 
 impl<T> BaseResp<T> {
-    pub fn ok(data: T) -> Self {
-        Self {
-            status: "200".to_string(),
-            message: "ok".to_string(),
-            data: Some(data),
-        }
-    }
     pub fn err(error: BaseError) -> Self {
         Self {
             status: error.code.to_string(),
