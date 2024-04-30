@@ -1,7 +1,6 @@
-<div hx-ext="ws" ws-connect="/ws/vsc/{{user_id}}">
-  <h6>  Silahkan Verififikas Email Anda,</h6> 
-  <!-- spinner -->
-  <div class="spinner-border" role="status" id="status">
-    <span class="visually-shown" >Checking...</span>
+<div id="status" hx-ext="ws" ws-connect="/ws/vsc/{{user_id}}">
+  <h6> Silahkan Verififikas Email Anda,</h6>
+  <div class="spinner-border" role="status">
+    <span class="visually-shown">Checking...</span>
   </div>
 </div>
