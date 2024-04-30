@@ -2,7 +2,7 @@ use std::{net::SocketAddr, sync::Arc};
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
-    page_handler::{error_page, htmx_login_cliked, login_page, page_404, signup_page},
+    page_handler::{error_page, home_page, htmx_login_cliked, login_page, page_404, signup_page},
     ws_handler::{email_checker_handler, mock_email_checker_handler},
 };
 use axum::{
@@ -62,17 +62,20 @@ pub async fn run() {
         );
 
     let app = Router::new()
-        .nest("/htmx", htmx)
-        .nest("/ws", ws)
-        .nest_service("/assets", ServeDir::new("assets"))
         .route("/error", get(error_page))
         .route("/login", get(login_page))
         .route("/signup", get(signup_page).post(signup::<AuthImpl>))
+        .route("/home", get(home_page))
+        .route("/", get(home_page))
+        // TODO change this callback url in keycloak
         .route(
             "/v1/callback-verified-email",
             get(callback_verify_email::<AuthImpl>),
         )
         .nest("/api/v1", api)
+        .nest("/htmx", htmx)
+        .nest("/ws", ws)
+        .nest_service("/assets", ServeDir::new("assets"))
         .with_state(auth);
 
     let app = app.fallback(page_404);

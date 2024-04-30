@@ -3,7 +3,7 @@ use axum::{extract::Query, response::Html};
 use rchaty_web::{
     error::Page404Template,
     htmx::LoginClicked,
-    page::{LoginTemplate, SignupTemplate},
+    page::{HomeTemplate, LoginTemplate, SignupTemplate},
     ErrorTemplate,
 };
 use serde::{Deserialize, Serialize};
@@ -41,6 +41,12 @@ pub async fn page_404() -> axum::response::Html<String> {
 
 pub async fn signup_page() -> axum::response::Html<String> {
     let template = SignupTemplate {};
+    let html = template.render().unwrap();
+    Html(html)
+}
+
+pub async fn home_page() -> axum::response::Html<String> {
+    let template = HomeTemplate {};
     let html = template.render().unwrap();
     Html(html)
 }
