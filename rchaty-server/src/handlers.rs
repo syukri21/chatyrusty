@@ -10,7 +10,7 @@ use axum::{
 use rchaty_core::{
     model::VerifiedEmailCallback, Auth, EmailVerifiedMessage, SigninParams, SignupParams,
 };
-use rchaty_web::htmx::{Alert, RedirectHtmx, VerifiedEmailChecker, VerifiedEmailSuccess};
+use rchaty_web::htmx::{Alert, VerifiedEmailChecker, VerifiedEmailSuccess};
 
 use crate::model::BaseResp;
 
@@ -35,9 +35,8 @@ where
     S: Auth + Send + Sync,
 {
     let resp = service.signin(params).await;
-    tracing::info!("resp: {:?}", resp);
     match resp {
-        Ok(_) => return RedirectHtmx::htmx("/home").into_response(),
+        Ok(ok) => return Json(BaseResp::ok(ok)).into_response(),
         Err(e) => return (StatusCode::BAD_REQUEST, Alert::htmx(e.messages)).into_response(),
     }
 }

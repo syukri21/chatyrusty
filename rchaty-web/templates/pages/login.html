@@ -4,7 +4,9 @@
 
 {% block content %}
 <main class="form-signin w-100 m-auto" id="main"  hx-ext="response-targets">
-  <form hx-post="/login" hx-target="#main" hx-target-error="#alert" >
+  <div id="hollow" class="d-none"></div>
+  <form hx-post="/login" hx-on::after-request="storeAuthToken(event.detail.xhr)" hx-target="#hollow" hx-target-error="#alert" >
+
     <img class="mb-4" src="/assets/image/logo.png" alt="" width="144" height="57">
     <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
 
