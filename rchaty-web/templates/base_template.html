@@ -33,18 +33,6 @@
       }
     }
 
-    function storeAuthToken(_data) {
-      if (_data.status !== 200) return;
-      _data = _data.response;
-      let data = JSON.parse(_data).data;
-      if (data) {
-        window.localStorage.setItem('token', data.token);
-        window.localStorage.setItem('rtoken', data.refresh_token);
-        window.localStorage.setItem('expIn', data.expires_in);
-        window.location.href = "/home"
-      }
-    }
-
     document.body.addEventListener('htmx:config-request', function (event) {
       if (getAuthToken().token) {
         event.detail.headers['Authorization'] = `Bearer ${getAuthToken().token}`;

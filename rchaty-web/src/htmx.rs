@@ -51,3 +51,29 @@ impl VerifiedEmailSuccess {
         template.render().unwrap()
     }
 }
+
+#[derive(Template)]
+#[template(path = "htmx/store_auth_token.html")]
+pub struct StoreAuthToken<'a> {
+    pub redirect_url: &'a str,
+    pub token: String,
+    pub refresh_token: String,
+    pub expires_in: i64,
+}
+
+impl<'a> StoreAuthToken<'a> {
+    pub fn htmx(
+        redirect_url: &str,
+        token: String,
+        refresh_token: String,
+        expires_in: i64,
+    ) -> String {
+        let template = StoreAuthToken {
+            redirect_url,
+            token,
+            refresh_token,
+            expires_in,
+        };
+        template.render().unwrap()
+    }
+}

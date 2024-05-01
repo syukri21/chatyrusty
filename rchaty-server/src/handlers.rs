@@ -10,7 +10,7 @@ use axum::{
 use rchaty_core::{
     model::VerifiedEmailCallback, Auth, EmailVerifiedMessage, SigninParams, SignupParams,
 };
-use rchaty_web::htmx::{Alert, VerifiedEmailChecker, VerifiedEmailSuccess};
+use rchaty_web::htmx::{Alert, StoreAuthToken, VerifiedEmailChecker, VerifiedEmailSuccess};
 
 use crate::model::BaseResp;
 
@@ -36,7 +36,14 @@ where
 {
     let resp = service.signin(params).await;
     match resp {
-        Ok(ok) => return Json(BaseResp::ok(ok)).into_response(),
+        // Ok(ok) => return Json(BaseResp::ok(ok)).into_response(),
+        Ok(result) => StoreAuthToken::htmx(
+            "/home",
+            result.token,
+            result.refresh_token,
+            result.expires_in,
+        )
+        .into_response(),
         Err(e) => return (StatusCode::BAD_REQUEST, Alert::htmx(e.messages)).into_response(),
     }
 }
