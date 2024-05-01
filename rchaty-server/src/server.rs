@@ -66,9 +66,8 @@ pub async fn run() {
         .route("/signup", get(signup_page).post(signup::<AuthImpl>))
         .route("/home", get(home_page))
         .route("/", get(home_page))
-        // TODO change this callback url in keycloak
         .route(
-            "/v1/callback-verified-email",
+            "/callback-verified-email",
             get(callback_verify_email::<AuthImpl>),
         )
         .nest("/api/v1", api)

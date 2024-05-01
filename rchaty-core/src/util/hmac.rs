@@ -30,7 +30,7 @@ impl Signature for HmacSignatureImpl {
         };
         mac.update(data.as_bytes());
         let result = mac.finalize().into_bytes();
-        let code = BASE64_STANDARD.encode(result);
+        let code = BASE64_URL_SAFE.encode(result);
         Ok(code)
     }
 
@@ -45,10 +45,8 @@ impl Signature for HmacSignatureImpl {
                 })
             }
         };
-        tracing::debug!("data: {:?}", data);
         mac.update(data.as_bytes());
-        let signature = BASE64_STANDARD.decode(signature)?;
-        tracing::debug!("signature: {:?}", signature);
+        let signature = BASE64_URL_SAFE.decode(signature)?;
         mac.verify_slice(&signature)?;
         Ok(())
     }
@@ -65,14 +63,16 @@ mod tests {
         let data = "239f1055-0a6b-4d01-9202-c0fff0a50a26";
         let res = hmac.sign(data).unwrap();
         println!("{}", res);
-        assert!("q52fkjXJGu6tuIgEMBdfsJkdhHThxxYrgU7J/Zx0cY0=" == res);
+        assert!("q52fkjXJGu6tuIgEMBdfsJkdhHThxxYrgU7J_Zx0cY0=" == res);
     }
 
     #[test]
     fn test_hmac_verify() {
         let hmac = HmacSignatureImpl::new("admin".to_string());
         let data = "239f1055-0a6b-4d01-9202-c0fff0a50a26";
-        let signature = "q52fkjXJGu6tuIgEMBdfsJkdhHThxxYrgU7J/Zx0cY0=";
+
+        let signature = "q52fkjXJGu6tuIgEMBdfsJkdhHThxxYrgU7J_Zx0cY0=";
+        // let signature = "q52fkjXJGu6tuIgEMBdfsJkdhHThxxYrgU7J/Zx0cY0=";
         let res = hmac.verify(data, signature);
         assert!(res.is_ok());
     }
