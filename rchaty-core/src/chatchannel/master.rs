@@ -1,9 +1,10 @@
+use super::model::MessageData;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fmt::Debug,
     sync::{Arc, Mutex},
 };
-
 use tokio::sync::broadcast::{self, Sender};
 
 #[derive(Clone)]
@@ -58,19 +59,23 @@ pub trait ChannelData: Send + Sync + Debug {
     fn data(&self) -> String;
 }
 
-#[derive(Debug)]
-pub struct ChannelDataImpl {
-    data: String,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelDataImpl<'a> {
+    channel_type: &'a str,
+    data: MessageData,
 }
 
-impl ChannelDataImpl {
-    pub fn new(data: String) -> Self {
-        Self { data }
+impl<'a> ChannelDataImpl<'a> {
+    pub fn new_chat_msg(data: MessageData) -> ChannelDataImpl<'a> {
+        Self {
+            channel_type: "chatMessage",
+            data,
+        }
     }
 }
 
-impl ChannelData for ChannelDataImpl {
+impl<'a> ChannelData for ChannelDataImpl<'a> {
     fn data(&self) -> String {
-        self.data.clone()
+        serde_json::to_string(self).unwrap()
     }
 }

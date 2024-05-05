@@ -9,7 +9,10 @@ use axum::{
 use axum_extra::{headers, TypedHeader};
 use futures::{sink::SinkExt, StreamExt};
 use rchaty_core::{
-    chatchannel::master::{ChannelDataImpl, MasterChannel},
+    chatchannel::{
+        master::{ChannelDataImpl, MasterChannel},
+        model::{Author, ContentType, MessageData, MessageStatus},
+    },
     Auth, EmailVerifiedChannel, EmailVerifiedMessage,
 };
 use rchaty_web::htmx::VerifiedEmailSuccess;
@@ -99,11 +102,7 @@ where
                     break;
                 }
                 let msg = msg.unwrap();
-                tracing::info!("{}: {}", user_id, msg.data());
-                sender
-                    .send(Message::Text(format!("{}: {}", user_id, msg.data())))
-                    .await
-                    .unwrap();
+                sender.send(Message::Text(msg.data())).await.unwrap();
             }
         });
     })
@@ -125,8 +124,33 @@ where
             return "channel does not exist".into_response();
         }
     };
-    let data = Arc::new(ChannelDataImpl::new("send chat from mock".to_string()));
-    let resp = tx.send(data);
+
+    let data = {
+        let id = "26e03da6-38f0-4951-b00b-16ef0ab0cd8b".to_string();
+        let conversation_id = "world".to_string();
+        let author = Author::new(
+            "9925ce5d-6174-4fd7-b978-018976280eb1".to_owned(),
+            user_id.to_owned(),
+            "email_test@example.com".to_owned(),
+            "https://gravatar.com/avatar/9925ce5d61744fd7b978018976280eb1".to_owned(),
+        );
+        let content = "test".to_string();
+        let content_type = ContentType::Text;
+        let status = MessageStatus::Sent;
+        let created_at = "test".to_string();
+        MessageData::new(
+            id,
+            conversation_id,
+            author,
+            content,
+            content_type,
+            created_at,
+            status,
+        )
+    };
+
+    let msg = Arc::new(ChannelDataImpl::new_chat_msg(data));
+    let resp = tx.send(msg);
     match resp {
         Ok(_) => {
             let msg = format!("sended data for user_id: {}", user_id);
