@@ -1,4 +1,5 @@
 pub mod channel;
+pub mod chatchannel;
 pub mod configuration;
 pub mod db;
 pub mod kcloak;
