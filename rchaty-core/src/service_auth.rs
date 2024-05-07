@@ -25,13 +25,13 @@ pub struct AuthImpl {
 impl AuthImpl {
     pub fn new(
         kcloak: KcloakImpl,
-        kcloak_client: KcloakClientImpl,
+        kcloak_client: Arc<KcloakClientImpl>,
         db: DBImpl,
         email_channel: EmailVerifiedChannelImpl,
     ) -> Self {
         AuthImpl {
             kcloak: Arc::new(kcloak),
-            kcloak_client: Arc::new(kcloak_client),
+            kcloak_client,
             db: Arc::new(db),
             email_channel: Arc::new(email_channel),
         }

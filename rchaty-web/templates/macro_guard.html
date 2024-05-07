@@ -1,0 +1,45 @@
+{% macro guard() %}
+<div hx-ext="loading-states">
+  <div 
+     hx-get="/htmx/check_auth" 
+     hx-ext="response-targets" 
+     hx-trigger="load delay:1s"
+     hx-swap="innerHTML"
+     data-loading-target="#loading"
+     data-loading-class-remove="hidden"
+     hidden>
+    Placeholder
+  </div>
+
+  <div class="p-8 bg-gray-100 transition-all ease-in-out duration-600" id="loading" data-loading-class-remove="bg-gray-100">
+    <div class="modal-backdrop justify-content-center align-items-center bg-gray " data-loading="flex">
+      <div class="spinner-grow spinner-grow-sm" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="spinner-grow spinner-grow-sm mx-2" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <div class="spinner-grow spinner-grow-sm" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+
+.modal-backdrop {
+  display: flex;
+  background: #000000B0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1050;
+  width: 100vw;
+  height: 100vh;
+}
+
+[data-loading] {
+  <!-- display: none; -->
+}
+</style>
+{% endmacro %}
