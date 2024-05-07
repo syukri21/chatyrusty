@@ -3,30 +3,22 @@ use std::{net::SocketAddr, sync::Arc};
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
     htmx_handler::check_auth,
+    middleware::auth_htmx_middleware,
     page_handler::{error_page, home_page, htmx_login_cliked, login_page, page_404, signup_page},
     ws_handler::{
         chat_handler, email_checker_handler, mock_chat_handler_sender, mock_email_checker_handler,
     },
 };
 use axum::{
-    body::Body,
-    extract::{Request, State},
-    http::{HeaderMap, StatusCode},
-    middleware::{self, Next},
-    response::{IntoResponse, Response},
+    middleware,
     routing::{get, post},
     Router,
 };
 use rchaty_core::{
-    chatchannel::master::MasterChannelImpl,
-    configuration::CoreConfiguration,
-    db::repository::DBImpl,
-    kcloak::KcloakImpl,
-    kcloak_client::{KcloakClient, KcloakClientImpl},
-    model::TokenIntrospect,
-    AuthImpl, EmailVerifiedChannelImpl,
+    chatchannel::master::MasterChannelImpl, configuration::CoreConfiguration,
+    db::repository::DBImpl, kcloak::KcloakImpl, kcloak_client::KcloakClientImpl, AuthImpl,
+    EmailVerifiedChannelImpl,
 };
-use rchaty_web::htmx::RedirectHtmx;
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tracing::info;
@@ -127,61 +119,4 @@ pub async fn run() {
     axum::serve(listener, app)
         .await
         .expect("Failed to start server");
-}
-
-async fn auth_htmx_middleware(
-    headers: HeaderMap,
-    State(state): State<Arc<KcloakClientImpl>>,
-    request: Request,
-    next: Next,
-) -> Response<Body> {
-    let token = match headers.get("Authorization") {
-        Some(token) => token.to_str().unwrap().to_string(),
-        None => return RedirectHtmx::htmx("/login").into_response(),
-    };
-
-    let token = token.replace("Bearer ", "");
-    tracing::info!("token: {:?}", token);
-    let introspect = state
-        .introspect(&token)
-        .await
-        .map_err(|_| StatusCode::UNAUTHORIZED);
-
-    let introspect = match introspect {
-        Ok(introspect) => introspect,
-        Err(_) => return RedirectHtmx::htmx("/login").into_response(),
-    };
-
-    tracing::info!("introspect: {:?}", introspect.name);
-    if !introspect.active {
-        return RedirectHtmx::htmx("/login").into_response();
-    }
-
-    next.run(request).await
-}
-
-#[warn(dead_code)]
-async fn auth_middleware(
-    headers: HeaderMap,
-    State(state): State<Arc<KcloakClientImpl>>,
-    request: Request,
-    next: Next,
-) -> Result<Response<Body>, StatusCode> {
-    let token = match headers.get("Authorization") {
-        Some(token) => token.to_str().unwrap().to_string(),
-        None => return Err(StatusCode::UNAUTHORIZED),
-    }
-    .replace("Bearer ", "");
-
-    let introspect = state
-        .introspect(&token)
-        .await
-        .map_err(|_| StatusCode::UNAUTHORIZED)?;
-
-    tracing::info!("introspect: {:?}", introspect);
-    if !introspect.active {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-
-    Ok(next.run(request).await)
 }

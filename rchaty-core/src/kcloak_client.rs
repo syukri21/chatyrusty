@@ -46,6 +46,7 @@ pub trait KcloakClient {
     async fn introspect(&self, token: &str) -> Result<TokenIntrospect, BaseError>;
     async fn user_info(&self, token: &str) -> Result<UserInfo, BaseError>;
     async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
+    async fn refresh_token(&self, refresh_tokenk: &str) -> Result<Token, BaseError>;
 }
 
 #[async_trait]
@@ -145,10 +146,36 @@ impl KcloakClient for KcloakClientImpl {
         if resp.status().is_success() {
             return Ok(());
         } else {
-            let errresp = resp.json::<KcloakErrorResponse>().await?;
+            let err = resp.json::<KcloakErrorResponse>().await?;
             return Err(BaseError {
                 code: 500,
-                messages: errresp.error_description,
+                messages: err.error_description,
+            });
+        }
+    }
+
+    async fn refresh_token(&self, refresh_token: &str) -> Result<Token, BaseError> {
+        let path = format!(
+            "/realms/{}/protocol/openid-connect/token",
+            self.config.realm
+        );
+        let url = format!("{}{}", self.config.url, path);
+        tracing::debug!("request url: {}", url);
+        let params = [
+            ("grant_type", "refresh_token"),
+            ("client_id", &self.config.client_id),
+            ("client_secret", &self.config.client_secret),
+            ("refresh_token", &refresh_token),
+        ];
+        tracing::debug!("request params: {:?}", params);
+        let resp = self.req_client.post(url).form(&params).send().await?;
+        if resp.status().is_success() {
+            return Ok(resp.json::<Token>().await?);
+        } else {
+            let err = resp.json::<KcloakErrorResponse>().await?;
+            return Err(BaseError {
+                code: 500,
+                messages: err.error_description,
             });
         }
     }
