@@ -34,8 +34,6 @@ pub async fn run() {
     // Initialize DB
     let db = DBImpl::connect(Arc::clone(&config).into()).await;
 
-    // Initialize EmailVerifiedChannel
-
     // Initialize Kcloak Client
     let kcloak_client = KcloakClientImpl::new(Arc::clone(&config).into())
         .expect("Error initializing kcloak client");
