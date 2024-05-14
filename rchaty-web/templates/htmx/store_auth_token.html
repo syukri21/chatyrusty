@@ -2,5 +2,7 @@
   window.localStorage.setItem('token', "{{token}}");
   window.localStorage.setItem('rtoken', "{{refresh_token}}");
   window.localStorage.setItem('expIn', "{{expires_in}}");
+  {% if need_redirect %}
   window.location.href = "{{redirect_url}}"
+  {% endif %}
 </script>

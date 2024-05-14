@@ -38,6 +38,7 @@ where
     match resp {
         // Ok(ok) => return Json(BaseResp::ok(ok)).into_response(),
         Ok(result) => StoreAuthToken::htmx(
+            true,
             "/home",
             result.token,
             result.refresh_token,

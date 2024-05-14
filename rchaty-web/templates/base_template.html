@@ -36,7 +36,9 @@
 
     document.body.addEventListener('htmx:config-request', function (event) {
       if (getAuthToken().token) {
-        event.detail.headers['Authorization'] = `Bearer ${getAuthToken().token}`;
+        let authToken = getAuthToken();
+        event.detail.headers['Authorization'] = `Bearer ${authToken.token}`;
+        event.detail.headers['X-Refresh-Token'] = `${authToken.refreshToken}`;
       }
     });
   </script>

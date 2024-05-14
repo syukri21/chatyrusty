@@ -2,7 +2,7 @@ use std::{net::SocketAddr, sync::Arc};
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
-    htmx_handler::check_auth,
+    htmx_handler::{check_auth, refresh_token},
     middleware::auth_htmx_middleware,
     page_handler::{error_page, home_page, htmx_login_cliked, login_page, page_404, signup_page},
     ws_handler::{
@@ -66,10 +66,10 @@ pub async fn run() {
     // Initialize Router htmx
     let htmx = Router::new()
         .route("/login_clicked", get(htmx_login_cliked))
-        .route(
-            "/check_auth",
-            get(check_auth).layer(*guard_htmx_auth.clone()),
-        );
+        .route("/refresh_auth", get(refresh_token))
+        .route("/check_auth", get(check_auth))
+        .layer(*guard_htmx_auth.clone())
+        .with_state(Arc::clone(&arc_kcloak_client));
 
     let ws = Router::new()
         .route("/chat/:user_id", get(chat_handler::<MasterChannelImpl>))

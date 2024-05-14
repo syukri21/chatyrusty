@@ -46,7 +46,7 @@ pub trait KcloakClient {
     async fn introspect(&self, token: &str) -> Result<TokenIntrospect, BaseError>;
     async fn user_info(&self, token: &str) -> Result<UserInfo, BaseError>;
     async fn revoke_token(&self, token: &str) -> Result<(), BaseError>;
-    async fn refresh_token(&self, refresh_tokenk: &str) -> Result<Token, BaseError>;
+    async fn refresh_token(&self, refresh_token: &str) -> Result<Token, BaseError>;
 }
 
 #[async_trait]
