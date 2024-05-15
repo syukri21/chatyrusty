@@ -38,13 +38,13 @@ impl MessageStatus {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MessageData {
-    id: String,
-    conversation_id: String,
-    author: Author,
-    content: String,
-    content_type: ContentType,
-    created_at: String,
-    status: MessageStatus,
+    pub id: String,
+    pub conversation_id: String,
+    pub author: Author,
+    pub content: String,
+    pub content_type: ContentType,
+    pub created_at: String,
+    pub status: MessageStatus,
 }
 
 impl MessageData {

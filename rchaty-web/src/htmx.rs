@@ -80,3 +80,17 @@ impl<'a> StoreAuthToken<'a> {
         template.render().unwrap()
     }
 }
+
+#[derive(Template)]
+#[template(path = "htmx/chat_incoming.html")]
+pub struct ChatIncomming<'a> {
+    pub content: &'a str,
+    pub date: &'a str,
+}
+
+impl<'a> ChatIncomming<'a> {
+    pub fn htmx(content: &'a str, date: &'a str) -> String {
+        let template = ChatIncomming { content, date };
+        template.render().unwrap()
+    }
+}

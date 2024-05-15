@@ -57,12 +57,14 @@ impl MasterChannel for MasterChannelImpl {
 
 pub trait ChannelData: Send + Sync + Debug {
     fn data(&self) -> String;
+    fn content(&self) -> String;
+    fn created_at(&self) -> String;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChannelDataImpl<'a> {
-    channel_type: &'a str,
-    data: MessageData,
+    pub channel_type: &'a str,
+    pub data: MessageData,
 }
 
 impl<'a> ChannelDataImpl<'a> {
@@ -77,5 +79,13 @@ impl<'a> ChannelDataImpl<'a> {
 impl<'a> ChannelData for ChannelDataImpl<'a> {
     fn data(&self) -> String {
         serde_json::to_string(self).unwrap()
+    }
+
+    fn content(&self) -> String {
+        self.data.content.clone()
+    }
+
+    fn created_at(&self) -> String {
+        self.data.created_at.clone()
     }
 }

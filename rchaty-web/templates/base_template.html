@@ -34,6 +34,13 @@
       }
     }
 
+    function getUserIdFromAuthToken() {
+      let token  = getAuthToken().token;
+      if (!token) return
+      token = JSON.parse(atob(token.split('.')[1]));
+      return token.sub;
+    }
+
     document.body.addEventListener('htmx:config-request', function (event) {
       if (getAuthToken().token) {
         let authToken = getAuthToken();
@@ -42,6 +49,8 @@
       }
     });
   </script>
+
+  {% block scripts %}<script></script>{% endblock %}
 </body>
 
 </html

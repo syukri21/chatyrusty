@@ -15,7 +15,7 @@ use rchaty_core::{
     },
     Auth, EmailVerifiedChannel, EmailVerifiedMessage,
 };
-use rchaty_web::htmx::VerifiedEmailSuccess;
+use rchaty_web::htmx::{ChatIncomming, VerifiedEmailSuccess};
 
 #[derive(Clone)]
 pub struct WsAppState {
@@ -102,7 +102,8 @@ where
                     break;
                 }
                 let msg = msg.unwrap();
-                sender.send(Message::Text(msg.data())).await.unwrap();
+                let msg = ChatIncomming::htmx(&msg.content(), &msg.created_at());
+                sender.send(Message::Text(msg)).await.unwrap();
             }
         });
     })
@@ -137,7 +138,7 @@ where
         let content = "test".to_string();
         let content_type = ContentType::Text;
         let status = MessageStatus::Sent;
-        let created_at = "test".to_string();
+        let created_at = "2022-01-01 00:00:00".to_string();
         MessageData::new(
             id,
             conversation_id,
