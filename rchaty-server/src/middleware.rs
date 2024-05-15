@@ -1,16 +1,15 @@
-use std::{env::var, sync::Arc};
+use std::sync::Arc;
 
 use axum::{
-    body::{Body, BodyDataStream},
+    body::Body,
     extract::{Request, State},
-    http::{response, HeaderMap, StatusCode},
+    http::{HeaderMap, StatusCode},
     middleware::Next,
     response::{IntoResponse, Response},
 };
 use futures::StreamExt;
 use rchaty_core::kcloak_client::{KcloakClient, KcloakClientImpl};
 use rchaty_web::htmx::{RedirectHtmx, StoreAuthToken};
-use tower::ServiceExt;
 
 pub async fn auth_htmx_middleware(
     headers: HeaderMap,
@@ -36,7 +35,7 @@ pub async fn auth_htmx_middleware(
     };
 
     tracing::info!("introspect: {:?}", introspect.name);
-    if !introspect.active {
+    if introspect.active {
         return next.run(request).await;
     }
 
@@ -45,6 +44,7 @@ pub async fn auth_htmx_middleware(
         Some(ref_token) => ref_token.to_str().unwrap().to_string(),
         None => return RedirectHtmx::htmx("/login").into_response(),
     };
+
     let ref_token = state.refresh_token(&ref_token).await;
     tracing::info!("ref_token: {:?}", ref_token);
     match ref_token {
