@@ -23,7 +23,7 @@ pub async fn auth_htmx_middleware(
     };
 
     let token = token.replace("Bearer ", "");
-    tracing::info!("token: {:?}", token);
+    tracing::info!("using auth token");
     let introspect = state
         .introspect(&token)
         .await
@@ -46,7 +46,7 @@ pub async fn auth_htmx_middleware(
     };
 
     let ref_token = state.refresh_token(&ref_token).await;
-    tracing::info!("ref_token: {:?}", ref_token);
+    tracing::info!("using refresh token");
     match ref_token {
         Ok(ok) => {
             tracing::info!("ok: {:?}", ok);
