@@ -1,0 +1,15 @@
+meta {
+  name: Contact List
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://localhost:3000/htmx/contact_list
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: {{AUTH}}
+}
