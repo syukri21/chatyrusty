@@ -2,7 +2,7 @@ use std::{net::SocketAddr, sync::Arc};
 
 use crate::{
     handlers::{callback_verify_email, revoke_token, send_verify_email, signin, signup},
-    htmx_handler::{check_auth, refresh_token},
+    htmx_handler::{check_auth, contact_list, refresh_token},
     middleware::auth_htmx_middleware,
     page_handler::{error_page, home_page, htmx_login_cliked, login_page, page_404, signup_page},
     ws_handler::{
@@ -15,9 +15,13 @@ use axum::{
     Router,
 };
 use rchaty_core::{
-    chatchannel::master::MasterChannelImpl, configuration::CoreConfiguration,
-    db::repository::DBImpl, kcloak::KcloakImpl, kcloak_client::KcloakClientImpl, AuthImpl,
-    EmailVerifiedChannelImpl,
+    chatchannel::master::MasterChannelImpl,
+    configuration::CoreConfiguration,
+    db::repository::{DBImpl, DB},
+    kcloak::KcloakImpl,
+    kcloak_client::KcloakClientImpl,
+    service::service_contact::ContactImpl,
+    AuthImpl, EmailVerifiedChannelImpl,
 };
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, trace::TraceLayer};
@@ -33,11 +37,16 @@ pub async fn run() {
 
     // Initialize DB
     let db = DBImpl::connect(Arc::clone(&config).into()).await;
+    let db: Arc<dyn DB + Send + Sync> = Arc::new(db);
 
     // Initialize Kcloak Client
-    let kcloak_client = KcloakClientImpl::new(Arc::clone(&config).into())
-        .expect("Error initializing kcloak client");
-    let arc_kcloak_client = Arc::new(kcloak_client);
+    let kcloak_client = Arc::new(
+        KcloakClientImpl::new(Arc::clone(&config).into())
+            .expect("Error initializing kcloak client"),
+    );
+
+    // contact_service
+    let contact_service = Arc::new(ContactImpl::new(db.clone(), kcloak_client.clone()));
 
     // Initialize Auth
     let auth = {
@@ -47,14 +56,18 @@ pub async fn run() {
             .expect("Error initializing kcloak");
 
         let email_channel = EmailVerifiedChannelImpl::new();
-
-        AuthImpl::new(kcloak, Arc::clone(&arc_kcloak_client), db, email_channel)
+        AuthImpl::new(
+            kcloak,
+            Arc::clone(&kcloak_client),
+            Arc::clone(&db),
+            email_channel,
+        )
     };
 
     let master_channel = MasterChannelImpl::new();
 
     let guard_htmx_auth = Box::new(middleware::from_fn_with_state(
-        Arc::clone(&arc_kcloak_client),
+        Arc::clone(&kcloak_client),
         auth_htmx_middleware,
     ));
 
@@ -68,8 +81,12 @@ pub async fn run() {
         .route("/login_clicked", get(htmx_login_cliked))
         .route("/refresh_auth", get(refresh_token))
         .route("/check_auth", get(check_auth))
+        .route(
+            "/contact_list",
+            get(contact_list).with_state(contact_service.clone()),
+        )
         .layer(*guard_htmx_auth.clone())
-        .with_state(Arc::clone(&arc_kcloak_client));
+        .with_state(Arc::clone(&kcloak_client));
 
     let ws = Router::new()
         .route("/chat/:user_id", get(chat_handler::<MasterChannelImpl>))

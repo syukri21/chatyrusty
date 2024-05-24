@@ -49,7 +49,6 @@ pub async fn auth_htmx_middleware(
     tracing::info!("using refresh token");
     match ref_token {
         Ok(ok) => {
-            tracing::info!("ok: {:?}", ok);
             let response = next.run(request).await;
             let body = response.into_body().into_data_stream();
 
@@ -69,6 +68,9 @@ pub async fn auth_htmx_middleware(
             let babi = body.chain(store);
             Body::from_stream(babi).into_response()
         }
-        Err(_) => return RedirectHtmx::htmx("/login").into_response(),
+        Err(err) => {
+            tracing::warn!("failed to refresh token err={}", err);
+            return RedirectHtmx::htmx("/login").into_response();
+        }
     }
 }

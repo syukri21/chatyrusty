@@ -8702,7 +8702,7 @@ body {
 
 .messages-box,
 .chat-box {
-  height: 510px;
+  height: 85vh;
   overflow-y: scroll;
 }
 

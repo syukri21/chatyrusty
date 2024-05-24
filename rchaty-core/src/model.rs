@@ -11,6 +11,15 @@ pub struct BaseError {
     pub messages: String,
 }
 
+impl BaseError {
+    pub fn new(code: usize, messages: &str) -> Self {
+        Self {
+            code,
+            messages: messages.to_string(),
+        }
+    }
+}
+
 impl From<tokio::sync::broadcast::error::SendError<EmailVerifiedMessage>> for BaseError {
     fn from(value: tokio::sync::broadcast::error::SendError<EmailVerifiedMessage>) -> Self {
         tracing::debug!("broadcast error: {:?}", value);

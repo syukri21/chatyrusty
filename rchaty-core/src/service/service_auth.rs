@@ -1,4 +1,3 @@
-use crate::db::repository::DBImpl;
 use crate::db::repository::DB;
 use crate::kcloak::Kcloak;
 use crate::kcloak::KcloakImpl;
@@ -26,13 +25,13 @@ impl AuthImpl {
     pub fn new(
         kcloak: KcloakImpl,
         kcloak_client: Arc<KcloakClientImpl>,
-        db: DBImpl,
+        db: Arc<dyn DB + Send + Sync>,
         email_channel: EmailVerifiedChannelImpl,
     ) -> Self {
         AuthImpl {
             kcloak: Arc::new(kcloak),
             kcloak_client,
-            db: Arc::new(db),
+            db,
             email_channel: Arc::new(email_channel),
         }
     }

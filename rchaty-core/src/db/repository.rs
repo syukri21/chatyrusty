@@ -1,10 +1,10 @@
-use std::sync::Arc;
+use std::{sync::Arc, usize};
 
 use async_trait::async_trait;
 use keycloak::types::UserRepresentation;
 use uuid::Uuid;
 
-use crate::{configuration::CoreConfiguration, BaseError};
+use crate::{configuration::CoreConfiguration, service::service_contact::ContactItem, BaseError};
 
 #[derive(Clone, Debug)]
 pub struct DBConfig {
@@ -63,6 +63,7 @@ impl DBImpl {
 pub trait DB {
     async fn save_user(&self, user: &UserRepresentation) -> Result<(), BaseError>;
     async fn update_verified_email(&self, user_id: &str) -> Result<(), BaseError>;
+    async fn get_contacts_by_user_id(&self, user_id: &str) -> Result<Vec<ContactItem>, BaseError>;
 }
 
 #[async_trait]
@@ -107,5 +108,29 @@ impl DB for DBImpl {
             });
         }
         Ok(())
+    }
+
+    async fn get_contacts_by_user_id(&self, user_id: &str) -> Result<Vec<ContactItem>, BaseError> {
+        let user_id = Uuid::parse_str(user_id)?;
+        let client = &self.client;
+        let rows = client
+            .query("SELECT * FROM contacts WHERE user_id = $1", &[&user_id])
+            .await
+            .map_err(|e| BaseError::from(e))?;
+
+        let res = rows
+            .iter()
+            .map(|row| {
+                return ContactItem {
+                    id: row.get(0),
+                    user_id: row.get::<usize, Uuid>(1).to_string(),
+                    friend_id: row.get::<usize, Uuid>(2).to_string(),
+                    name: row.get(3),
+                    created_at: row.get(4),
+                };
+            })
+            .collect();
+
+        Ok(res)
     }
 }

@@ -6,11 +6,41 @@ use axum::{
     http::HeaderMap,
     response::{IntoResponse, Response},
 };
-use rchaty_core::kcloak_client::{KcloakClient, KcloakClientImpl};
-use rchaty_web::htmx::{RedirectHtmx, StoreAuthToken};
+use rchaty_core::{
+    kcloak_client::{KcloakClient, KcloakClientImpl},
+    service::service_contact::{Contact, ContactImpl},
+};
+use rchaty_web::htmx::{ContactItemHtmx, ContactListHtmx, RedirectHtmx, StoreAuthToken};
 
 pub async fn check_auth() -> Response<Body> {
     ("ok").into_response()
+}
+
+pub async fn contact_list(
+    headers: HeaderMap,
+    State(state): State<Arc<ContactImpl>>,
+) -> Response<Body> {
+    tracing::info!("htmx contact list");
+    let token = headers.get("Authorization");
+
+    let token = match token {
+        Some(token) => token.to_str().unwrap().replace("Bearer ", "").to_string(),
+        None => return RedirectHtmx::htmx("/login").into_response(),
+    };
+
+    let contact_list = state.show_contact_list(&token).await;
+    let contact_list = match contact_list {
+        Ok(ok) => ok,
+        Err(err) => {
+            return err.messages.into_response();
+        }
+    };
+
+    let contact_list: Vec<ContactItemHtmx> = contact_list
+        .iter()
+        .map(|contact| ContactItemHtmx::new(&contact.user_id, &contact.name))
+        .collect();
+    ContactListHtmx::htmx(&contact_list).into_response()
 }
 
 pub async fn refresh_token(

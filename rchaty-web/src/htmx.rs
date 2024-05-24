@@ -94,3 +94,28 @@ impl<'a> ChatIncomming<'a> {
         template.render().unwrap()
     }
 }
+
+#[derive(Template)]
+#[template(path = "htmx/contact_list.html")]
+pub struct ContactListHtmx<'a> {
+    pub contacts: &'a Vec<ContactItemHtmx<'a>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ContactItemHtmx<'a> {
+    pub user_id: &'a str,
+    pub name: &'a str,
+}
+
+impl<'a> ContactItemHtmx<'a> {
+    pub fn new(user_id: &'a str, name: &'a str) -> Self {
+        ContactItemHtmx { user_id, name }
+    }
+}
+
+impl<'a> ContactListHtmx<'a> {
+    pub fn htmx(contacts: &'a Vec<ContactItemHtmx<'a>>) -> String {
+        let template = ContactListHtmx { contacts };
+        template.render().unwrap()
+    }
+}

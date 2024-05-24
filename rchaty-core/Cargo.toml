@@ -12,7 +12,7 @@ keycloak = "21.0.102"
 dotenvy = "0.15"
 serde ={ version = "1.0.197", features = ["derive"] } 
 reqwest = "0.11.27"
-tokio-postgres = {version="0.7.10", features=["with-uuid-0_8"] }
+tokio-postgres = {version="0.7.10", features=["with-uuid-0_8", "with-chrono-0_4"] }
 tokio = { version = "1.37.0", features = ["full"] }
 postgres-types = { version = "0.2.6", features = ["derive"] }
 uuid = "0.8.2"
@@ -20,3 +20,5 @@ hmac = "0.12.1"
 sha2 = "0.10.8"
 base64 = "0.22.0"
 serde_json = "1.0.116"
+chrono = { version = "0.4", features = ["serde"] }
+

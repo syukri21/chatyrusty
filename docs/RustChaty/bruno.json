@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "RustChaty",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
