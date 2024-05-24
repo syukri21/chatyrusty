@@ -2,12 +2,12 @@
 
   {% for contact in contacts %}
   <a class="list-group-item list-group-item-action active text-white rounded-0">
-    <div class="media"><img src="https://bootstrapious.com/i/snippets/sn-chat/avatar.svg" alt="user" width="50" class="rounded-circle">
+    <div class="media"><img src="https://api.multiavatar.com/{{ contact.user_id }}.svg" alt="user" width="50" class="rounded-circle">
       <div class="media-body ml-4">
         <div class="d-flex align-items-center justify-content-between mb-1">
           <h6 class="mb-0">{{ contact.name }}</h6><small class="small font-weight-bold">25 Dec</small>
         </div>
-        <p class="font-italic mb-0 text-small">{{ contact.user_id }}</p>
+        <p class="font-italic mb-0 text-small">Hello guys</p>
       </div>
     </div>
   </a>
