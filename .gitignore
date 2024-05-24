@@ -2,6 +2,6 @@
 target
 ./style/node_modules
 ./docker/volumes
-
+style/node_modules/*
 
 .DS_Store
