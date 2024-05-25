@@ -6,11 +6,14 @@ use axum::{
     http::HeaderMap,
     response::{IntoResponse, Response},
 };
+use axum_extra::extract::CookieJar;
 use rchaty_core::{
     kcloak_client::{KcloakClient, KcloakClientImpl},
     service::service_contact::{Contact, ContactImpl},
 };
 use rchaty_web::htmx::{ContactItemHtmx, ContactListHtmx, RedirectHtmx, StoreAuthToken};
+
+use crate::middleware::parse_auth;
 
 pub async fn check_auth() -> Response<Body> {
     ("ok").into_response()
@@ -18,13 +21,14 @@ pub async fn check_auth() -> Response<Body> {
 
 pub async fn contact_list(
     headers: HeaderMap,
+    jar: CookieJar,
     State(state): State<Arc<ContactImpl>>,
 ) -> Response<Body> {
     tracing::info!("htmx contact list");
-    let token = headers.get("Authorization");
 
+    let token = parse_auth(&headers, &jar).await;
     let token = match token {
-        Some(token) => token.to_str().unwrap().replace("Bearer ", "").to_string(),
+        Some(token) => token,
         None => return RedirectHtmx::htmx("/login").into_response(),
     };
 

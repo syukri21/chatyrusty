@@ -7,6 +7,8 @@ use axum::{
     response::{IntoResponse, Redirect, Response},
     Form, Json,
 };
+use axum_extra::extract::{cookie::Cookie, CookieJar};
+
 use rchaty_core::{
     model::VerifiedEmailCallback, Auth, EmailVerifiedMessage, SigninParams, SignupParams,
 };
@@ -30,22 +32,32 @@ where
     }
 }
 
-pub async fn signin<S>(State(service): State<S>, Form(params): Form<SigninParams>) -> Response<Body>
+pub async fn signin<S>(
+    jar: CookieJar,
+    State(service): State<S>,
+    Form(params): Form<SigninParams>,
+) -> Result<(CookieJar, String), Response<Body>>
 where
     S: Auth + Send + Sync,
 {
     let resp = service.signin(params).await;
     match resp {
         // Ok(ok) => return Json(BaseResp::ok(ok)).into_response(),
-        Ok(result) => StoreAuthToken::htmx(
-            true,
-            "/home",
-            result.token,
-            result.refresh_token,
-            result.expires_in,
-        )
-        .into_response(),
-        Err(e) => return (StatusCode::BAD_REQUEST, Alert::htmx(e.messages)).into_response(),
+        Ok(result) => {
+            let token = Cookie::new("authToken", result.token.clone());
+            let refresh_token = Cookie::new("refToken", result.refresh_token.clone());
+            Ok((
+                jar.add(token).add(refresh_token),
+                StoreAuthToken::htmx(
+                    true,
+                    "/home",
+                    result.token,
+                    result.refresh_token,
+                    result.expires_in,
+                ),
+            ))
+        }
+        Err(e) => return Err((StatusCode::BAD_REQUEST, Alert::htmx(e.messages)).into_response()),
     }
 }
 
