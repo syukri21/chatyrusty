@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Request, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
     middleware::Next,
     response::IntoResponse,
 };
@@ -10,21 +10,16 @@ use axum_extra::extract::{cookie::Cookie, CookieJar};
 use rchaty_core::kcloak_client::{KcloakClient, KcloakClientImpl};
 use rchaty_web::htmx::RedirectHtmx;
 
-pub async fn parse_auth(headers: &HeaderMap, jar: &CookieJar) -> Option<String> {
-    return parse_auth_header((headers, "Authorization"), (jar, "authToken")).await;
+pub async fn parse_auth(jar: &CookieJar) -> Option<String> {
+    return parse_auth_header((jar, "authToken")).await;
 }
 
-#[warn(dead_code)]
-pub async fn parse_ref_auth(headers: &HeaderMap, jar: &CookieJar) -> Option<String> {
-    return parse_auth_header((headers, "X-Refresh-Token"), (jar, "refToken")).await;
+pub async fn parse_ref_auth(jar: &CookieJar) -> Option<String> {
+    return parse_auth_header((jar, "refToken")).await;
 }
 
-pub async fn parse_auth_header(
-    headers: (&HeaderMap, &str),
-    jar: (&CookieJar, &str),
-) -> Option<String> {
-    tracing::info!("Parse cookie token type {}", headers.1);
-    tracing::info!("Parse header token type {}", jar.1);
+pub async fn parse_auth_header(jar: (&CookieJar, &str)) -> Option<String> {
+    tracing::info!("using cookie header");
 
     let token = jar.0.get(jar.1);
     if token.is_none() {
@@ -36,30 +31,17 @@ pub async fn parse_auth_header(
         tracing::info!("using cookie token");
         return Some(token.value().to_string());
     }
-
-    let token = headers.0.get(headers.1);
-    let token = match token {
-        Some(token) => {
-            let token = token.to_str().unwrap().to_string();
-            let token = token.replace("Bearer ", "");
-            tracing::info!("using header token");
-            return Some(token);
-        }
-        None => None,
-    };
-
-    token
+    None
 }
 
 pub async fn auth_htmx_middleware(
-    headers: HeaderMap,
     jar: CookieJar,
     State(state): State<Arc<KcloakClientImpl>>,
     request: Request,
     next: Next,
 ) -> impl IntoResponse {
     {
-        let token = parse_auth_header((&headers, "Authorization"), (&jar, "authToken")).await;
+        let token = parse_auth(&jar).await;
         let token = match token {
             Some(token) => token,
             None => return RedirectHtmx::htmx("/login").into_response(),
@@ -83,7 +65,7 @@ pub async fn auth_htmx_middleware(
     };
 
     {
-        let ref_token = parse_auth_header((&headers, "X-Refresh-Token"), (&jar, "refToken")).await;
+        let ref_token = parse_ref_auth(&jar).await;
         let ref_token = match ref_token {
             Some(ref_token) => ref_token,
             None => return RedirectHtmx::htmx("/login").into_response(),

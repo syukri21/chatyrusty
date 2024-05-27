@@ -19,14 +19,10 @@ pub async fn check_auth() -> Response<Body> {
     ("ok").into_response()
 }
 
-pub async fn contact_list(
-    headers: HeaderMap,
-    jar: CookieJar,
-    State(state): State<Arc<ContactImpl>>,
-) -> Response<Body> {
+pub async fn contact_list(jar: CookieJar, State(state): State<Arc<ContactImpl>>) -> Response<Body> {
     tracing::info!("htmx contact list");
 
-    let token = parse_auth(&headers, &jar).await;
+    let token = parse_auth(&jar).await;
     let token = match token {
         Some(token) => token,
         None => return RedirectHtmx::htmx("/login").into_response(),
