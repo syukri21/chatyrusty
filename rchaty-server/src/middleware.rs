@@ -19,8 +19,6 @@ pub async fn parse_ref_auth(jar: &CookieJar) -> Option<String> {
 }
 
 pub async fn parse_auth_header(jar: (&CookieJar, &str)) -> Option<String> {
-    tracing::info!("using cookie header");
-
     let token = jar.0.get(jar.1);
     if token.is_none() {
         return None;

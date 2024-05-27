@@ -38,7 +38,7 @@ pub async fn contact_list(jar: CookieJar, State(state): State<Arc<ContactImpl>>)
 
     let contact_list: Vec<ContactItemHtmx> = contact_list
         .iter()
-        .map(|contact| ContactItemHtmx::new(&contact.user_id, &contact.name))
+        .map(|contact| ContactItemHtmx::new(&contact.friend_id, &contact.name))
         .collect();
     ContactListHtmx::htmx(&contact_list).into_response()
 }
