@@ -5,7 +5,7 @@ use crate::{
     htmx_handler::{check_auth, contact_list, refresh_token},
     middleware::auth_htmx_middleware,
     page_handler::{error_page, home_page, htmx_login_cliked, login_page, page_404, signup_page},
-    ws_handler::{chat_handler, email_checker_handler},
+    ws_handler::{chat_handler, contact_list_handler, email_checker_handler},
     ws_mock_handler::{mock_chat_handler_sender, mock_email_checker_handler},
 };
 use axum::{
@@ -89,6 +89,10 @@ pub async fn run() {
         .with_state(Arc::clone(&kcloak_client));
 
     let ws = Router::new()
+        .route(
+            "/contact_list",
+            get(contact_list_handler::<MasterChannelImpl>),
+        )
         .route("/chat/:user_id", get(chat_handler::<MasterChannelImpl>))
         .route(
             "/mock/chat/:user_id",

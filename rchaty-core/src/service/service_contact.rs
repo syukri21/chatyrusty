@@ -7,7 +7,7 @@ use crate::{db::repository::DB, kcloak_client::KcloakClient, model::TokenIntrosp
 
 #[async_trait]
 pub trait Contact {
-    async fn show_contact_list(&self, _token: &str) -> Result<Vec<ContactItem>, BaseError>;
+    async fn show_contact_list(&self, token: &str) -> Result<Vec<ContactItem>, BaseError>;
 }
 
 #[derive(Debug, Clone)]

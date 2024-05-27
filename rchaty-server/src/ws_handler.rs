@@ -15,6 +15,10 @@ pub struct WsAppState {
     pub email_verified_channel: Arc<dyn EmailVerifiedChannel + Send + Sync>,
 }
 
+pub async fn contact_list_handler<S>() -> impl IntoResponse {
+    todo!("implement contact list ws handler")
+}
+
 pub async fn email_checker_handler<S>(
     ws: WebSocketUpgrade,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
